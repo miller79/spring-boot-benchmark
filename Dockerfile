@@ -1,11 +1,10 @@
-FROM maven:3.6.0-jdk-11 AS build
+FROM maven:3.6.3-jdk-11 AS build
 COPY src /tmp/src/
 COPY pom.xml /tmp/
 WORKDIR /tmp/
-RUN mvn clean verify
+RUN mvn package
 
 FROM openjdk:11
+COPY --from=build /tmp/target/spring-boot-benchmark.jar spring-boot-benchmark.jar
 EXPOSE 8080
-
-ADD target/spring-boot-benchmark.jar spring-boot-benchmark.jar
 ENTRYPOINT exec java $JAVA_OPTS -jar spring-boot-benchmark.jar
