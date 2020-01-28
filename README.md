@@ -16,7 +16,7 @@ docker build -t spring-boot-benchmark .
 docker run --cpus=".6" spring-boot-benchmark
 ```
 
-## Stop All Local Running Docker Quickly
+## Stop All Local Running Docker Quickly (PowerShell commands)
 
 ```
 docker ps -a -q | % { docker stop $_ }
