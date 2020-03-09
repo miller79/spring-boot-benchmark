@@ -1,5 +1,7 @@
 spring:
   main:
     lazy-initialization: true
-  data:    jpa:
-      repositories:        bootstrap-mode: lazy
+  data:
+    jpa:
+      repositories:
+        bootstrap-mode: lazy
