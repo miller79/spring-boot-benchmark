@@ -9,7 +9,21 @@ This hopefully will be a demo that could be used for others who are working on t
 
 An issue for Spring Boot that follows this is available [here](https://github.com/spring-projects/spring-boot/issues/19911).
 
+## Benchmarks Available
+
+The following benchmarks are available.
+
+### spring-boot-benchmark-original
+
+This application is a barebones Spring Boot application demonstrating the optimized way to create an application with just spring-boot-starter-webflux.
+
+### spring-boot-benchmark-data-jpa
+
+This application shows optimizations for applications using Spring Boot using spring-boot-starter-data-jpa.
+
 ## Build and Run Application
+
+Go to the folder of the benchmark you would like to run an run the following commands.
 
 ```
 docker build -t spring-boot-benchmark .

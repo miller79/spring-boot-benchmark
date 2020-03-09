@@ -3,7 +3,7 @@ ADD . /tmp/
 WORKDIR /tmp/
 RUN mvn package
 RUN mkdir /tmp/target/dependency
-RUN unzip /tmp/target/spring-boot-benchmark.jar -d /tmp/target/dependency 
+RUN unzip /tmp/target/spring-boot-benchmark-original.jar -d /tmp/target/dependency 
 
 FROM openjdk:11
 ARG DEPENDENCY=/tmp/target/dependency
