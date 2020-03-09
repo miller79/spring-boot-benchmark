@@ -11,15 +11,15 @@ An issue for Spring Boot that follows this is available [here](https://github.co
 
 ## Benchmarks Available
 
-The following benchmarks are available.
+The following benchmarks are available within this project.
 
 ### spring-boot-benchmark-original
 
-This application is a barebones Spring Boot application demonstrating the optimized way to create an application with just spring-boot-starter-webflux.
+This application is a barebones Spring Boot application demonstrating the optimized way to create an application with just `spring-boot-starter-webflux`.
 
 ### spring-boot-benchmark-data-jpa
 
-This application shows optimizations for applications using Spring Boot using spring-boot-starter-data-jpa.
+This application shows optimizations for applications using Spring Boot using `spring-boot-starter-data-jpa`.
 
 ## Build and Run Application
 
