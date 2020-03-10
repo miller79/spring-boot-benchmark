@@ -25,6 +25,10 @@ This application shows optimizations for applications using Spring Boot using `s
 
 This application takes the spring-boot-benchmark-original and adds `spring-cloud-starter-config`.
 
+### spring-boot-benchmark-camel-activemq
+
+This application takes the spring-boot-benchmark-original and adds `camel-activemq-starter`.
+
 ## Build and Run Application
 
 Go to the folder of the benchmark you would like to run an run the following commands.
