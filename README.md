@@ -29,6 +29,10 @@ This application takes the spring-boot-benchmark-original and adds `spring-cloud
 
 This application takes the spring-boot-benchmark-original and adds `camel-activemq-starter`.
 
+### spring-boot-benchmark-all
+
+This application reflects the minimal application with all dependencies added.
+
 ## Build and Run Application
 
 Go to the folder of the benchmark you would like to run an run the following commands.
