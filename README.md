@@ -29,6 +29,14 @@ This application takes the spring-boot-benchmark-original and adds `spring-cloud
 
 This application takes the spring-boot-benchmark-original and adds `camel-activemq-starter`.
 
+### spring-boot-benchmark-keycloak
+
+This application takes the spring-boot-benchmark-original and adds `keycloak-spring-boot-starter`.
+
+### spring-boot-benchmark-micronaut
+
+This application wraps the spring-boot-benchmark-original with the Micronaut framework.
+
 ### spring-boot-benchmark-all
 
 This application reflects the minimal application with all dependencies added.
