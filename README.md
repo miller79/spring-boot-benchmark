@@ -17,6 +17,10 @@ The following benchmarks are available within this project.
 
 This application is a barebones Spring Boot application demonstrating the optimized way to create an application with just `spring-boot-starter-webflux`.
 
+### spring-boot-benchmark-tomcat
+
+This application takes the spring-boot-benchmark-original and replaces webflux with web to test Tomcat vs Netty.
+
 ### spring-boot-benchmark-data-jpa
 
 This application shows optimizations for applications using Spring Boot using `spring-boot-starter-data-jpa`.
