@@ -21,6 +21,10 @@ This application is a barebones Spring Boot application demonstrating the optimi
 
 This application shows optimizations for applications using Spring Boot using `spring-boot-starter-data-jpa`.
 
+### spring-boot-benchmark-data-rest
+
+This application shows optimizations for application susing Spring Boot using `spring-boot-starter-data-rest`.
+
 ### spring-boot-benchmark-cloud-config
 
 This application takes the spring-boot-benchmark-original and adds `spring-cloud-starter-config`.

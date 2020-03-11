@@ -16,7 +16,7 @@
 	<properties>
 		<java.version>11</java.version>
 		<micronaut.version>1.3.2</micronaut.version>
-		<micronaut.spring.version>1.0.</micronaut.spring.version>
+		<micronaut.spring.version>1.0.1</micronaut.spring.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<exec.mainClass>miller79.Application</exec.mainClass>
 	</properties>
