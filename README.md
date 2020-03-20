@@ -63,5 +63,5 @@ docker ps -a -q | % { docker rm $_ }
 
 ## Resources
 
-[spring-boot-benchmark benchmarks in AKS](spring-boot-benchmark-benchmarks.md)
-[Various Framework Benchmark](various-framework-benchmark.md)
+- [spring-boot-benchmark benchmarks in AKS](spring-boot-benchmark-benchmarks.md)
+- [Various Framework Benchmark](various-framework-benchmark.md)
