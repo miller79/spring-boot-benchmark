@@ -37,10 +37,6 @@ This application takes the spring-boot-benchmark-original and adds `spring-cloud
 
 This application takes the spring-boot-benchmark-original and adds `camel-activemq-starter`.
 
-### spring-boot-benchmark-micronaut
-
-This application wraps the spring-boot-benchmark-original with the Micronaut framework.
-
 ### spring-boot-benchmark-quarkus
 
 This application is the out of the box quarkus app for startup time comparison purposes only.
