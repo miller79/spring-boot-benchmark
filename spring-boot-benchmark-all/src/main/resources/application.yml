@@ -5,3 +5,12 @@ spring:
     jpa:
       repositories:
         bootstrap-mode: lazy
+
+management:
+  health:
+    jms:
+      enabled: false
+      
+health:
+  config:
+    enabled: false

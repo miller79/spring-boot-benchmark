@@ -1,3 +1,5 @@
 spring:
   main:
     lazy-initialization: true
+
+health:  config:    enabled: false
