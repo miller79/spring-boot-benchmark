@@ -10,12 +10,12 @@
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>miller79</groupId>
-	<artifactId>spring-boot-benchmark-data-jpa</artifactId>
-	<version>${revision}</version>
+	<artifactId>spring-boot-benchmark-native</artifactId>
+	<version>LOCAL-SNAPSHOT</version>
 
 	<properties>
 		<java.version>11</java.version>
-		<revision>LOCAL-SNAPSHOT</revision>
+		<spring-native.version>0.10.5</spring-native.version>
 	</properties>
 
 	<dependencies>
@@ -28,13 +28,9 @@
 			<artifactId>spring-boot-starter-webflux</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-data-jpa</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.h2database</groupId>
-			<artifactId>h2</artifactId>
-			<scope>runtime</scope>
+			<groupId>org.springframework.experimental</groupId>
+			<artifactId>spring-native</artifactId>
+			<version>${spring-native.version}</version>
 		</dependency>
 	</dependencies>
 
@@ -44,9 +40,13 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
-					<layers>
-						<enabled>true</enabled>
-					</layers>
+					<image>
+						<builder>paketobuildpacks/builder:tiny</builder>
+						<env>
+							<BP_NATIVE_IMAGE>true</BP_NATIVE_IMAGE>
+							<BP_NATIVE_IMAGE_BUILD_ARGUMENTS>--enable-https</BP_NATIVE_IMAGE_BUILD_ARGUMENTS>
+						</env>
+					</image>
 					<additionalProperties>
 						<description>${project.description}</description>
 					</additionalProperties>
@@ -55,6 +55,25 @@
 					<execution>
 						<goals>
 							<goal>build-info</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.springframework.experimental</groupId>
+				<artifactId>spring-aot-maven-plugin</artifactId>
+				<version>${spring-native.version}</version>
+				<executions>
+					<execution>
+						<id>test-generate</id>
+						<goals>
+							<goal>test-generate</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>generate</id>
+						<goals>
+							<goal>generate</goal>
 						</goals>
 					</execution>
 				</executions>

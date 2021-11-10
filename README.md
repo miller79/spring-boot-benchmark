@@ -15,7 +15,11 @@ The following benchmarks are available within this project.
 
 ### spring-boot-benchmark-original
 
-This application is a barebones Spring Boot application demonstrating the optimized way to create an application with just `spring-boot-starter-webflux`.
+This application is a barebones Spring Boot application demonstrating a way to create an application with just `spring-boot-starter-webflux`.
+
+### spring-boot-benchmark-native
+
+This application takes the spring-boot-benchmark-original and makes it native compatible to run on GraalVM.
 
 ### spring-boot-benchmark-tomcat
 
@@ -23,23 +27,19 @@ This application takes the spring-boot-benchmark-original and replaces webflux w
 
 ### spring-boot-benchmark-data-jpa
 
-This application shows optimizations for applications using Spring Boot using `spring-boot-starter-data-jpa`.
+This is a Spring Boot application that uses `spring-boot-starter-data-jpa`.
 
 ### spring-boot-benchmark-data-rest
 
-This application shows optimizations for applications using Spring Boot using `spring-boot-starter-data-rest`.
-
-### spring-boot-benchmark-cloud-config
-
-This application takes the spring-boot-benchmark-original and adds `spring-cloud-starter-config`.
+This is a Spring Boot application that uses `spring-boot-starter-data-rest`.
 
 ### spring-boot-benchmark-camel-activemq
 
 This application takes the spring-boot-benchmark-original and adds `camel-activemq-starter`.
 
-### spring-boot-benchmark-quarkus
+### spring-boot-benchmark-keycloak
 
-This application is the out of the box quarkus app for startup time comparison purposes only.
+This application is the spring-boot-benchmark-original with keycloak added.
 
 ### spring-boot-benchmark-all
 
@@ -50,8 +50,8 @@ This application reflects the minimal application with all dependencies added.
 Go to the folder of the benchmark you would like to run an run the following commands.
 
 ```
-docker build -t spring-boot-benchmark .
-docker run --cpus=".6" spring-boot-benchmark
+mvn package spring-boot:build-image -Dspring-boot.build-image.imageName=spring-boot-benchmark
+docker run --rm --cpus=".6" -e="BPL_SPRING_CLOUD_BINDINGS_ENABLED=false" -e="JAVA_TOOL_OPTIONS=-XX:ActiveProcessorCount=1" spring-boot-benchmark
 ```
 
 ## Stop All Local Running Docker Quickly (PowerShell commands)
@@ -63,5 +63,4 @@ docker ps -a -q | % { docker rm $_ }
 
 ## Resources
 
-- [spring-boot-benchmark Benchmarks in AKS](spring-boot-benchmark-benchmarks.md)
-- [Various Framework Benchmark](various-framework-benchmark.md)
+- [spring-boot-benchmark Benchmarks in GKE](spring-boot-benchmark-benchmarks.md)
