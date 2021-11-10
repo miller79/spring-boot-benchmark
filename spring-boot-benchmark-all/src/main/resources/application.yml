@@ -1,16 +1,8 @@
 spring:
   activemq:
     broker-url: tcp://localhost:61616
-  data:
-    jpa:
-      repositories:
-        bootstrap-mode: lazy
 
 management:
   health:
     jms:
       enabled: false
-      
-health:
-  config:
-    enabled: false
