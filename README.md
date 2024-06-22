@@ -3,11 +3,11 @@
 ## Introduction
 
 This repository is a benchmark for Spring Boot running in Docker.
-It is meant to be a demonstration of the performance concerns with Spring Boot and will hopefully lead to documentation that can focus on the desired solution.
-The end goal of this benchmark is to be the most optimal configured Spring Boot application in relationship to startup time.
-This hopefully will be a demo that could be used for others who are working on the same problem.
+It is meant to demonstrate the performance concerns with Spring Boot and, hopefully, lead to documentation that can focus on the desired solution.
+The end goal of this benchmark is to be the most optimally configured Spring Boot application in relationship to startup time.
+This repository can be used as a benchmark that others can use to demonstrate startup timing benchmarks.
 
-An issue for Spring Boot that this was originally created for is [here](https://github.com/spring-projects/spring-boot/issues/19911).
+The Spring Boot GitHub issue this repository was created originally for is available [here](https://github.com/spring-projects/spring-boot/issues/19911).
 
 ## Benchmarks Available
 
@@ -15,11 +15,11 @@ The following benchmarks are available within this project.
 
 ### spring-boot-benchmark-original
 
-This application is a barebones Spring Boot application demonstrating a way to create an application with just `spring-boot-starter-webflux`.
+This project is a barebones Spring Boot application that demonstrates an application using just `spring-boot-starter-webflux`.
 
 ### spring-boot-benchmark-native
 
-This application takes the spring-boot-benchmark-original and makes it native compatible to run on GraalVM.
+This application takes the spring-boot-benchmark-original and makes it native-compatible to run on GraalVM.
 
 ### spring-boot-benchmark-tomcat
 
@@ -27,11 +27,11 @@ This application takes the spring-boot-benchmark-original and replaces webflux w
 
 ### spring-boot-benchmark-data-jpa
 
-This is a Spring Boot application that uses `spring-boot-starter-data-jpa`.
+This application is a Spring Boot application that uses `spring-boot-starter-data-jpa`.
 
 ### spring-boot-benchmark-data-rest
 
-This is a Spring Boot application that uses `spring-boot-starter-data-rest`.
+This application is a Spring Boot application that uses `spring-boot-starter-data-rest`.
 
 ### spring-boot-benchmark-camel-activemq
 
@@ -43,11 +43,21 @@ This application reflects the minimal application with all dependencies added.
 
 ## Build and Measure Runtimes
 
-The `measure-runtime.sh` Bash Script will build and run of the projects and provide startup times. To run this script the following dependencies are required:
+The `measure-runtime.sh` Bash script will build and run all projects and provide startup times. The following dependencies are required to be able to run this script:
 
 - Maven 3.6.3+
 - JDK 21+
 - Docker
+
+Each application starts up and stops itself by running the following method in the main class of each application:
+
+`SpringApplication.run(Application.class, args).close();`
+
+This script builds the applications using `Maven` and the goal `spring-boot:build-image`. Once the application is built, the script will run the application ten times with the following settings:
+
+- --cpus=".6"
+- -e="BPL_SPRING_CLOUD_BINDINGS_ENABLED=false"
+- -e="JAVA_TOOL_OPTIONS=-XX:ActiveProcessorCount=1"
 
 ## Results
 
