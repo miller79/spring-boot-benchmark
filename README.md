@@ -41,10 +41,6 @@ This application takes the spring-boot-benchmark-original and adds `camel-active
 
 This application reflects the minimal application with all dependencies added.
 
-### spring-boot-benchmark-all-native
-
-This application reflects the minimal application with all dependencies added running with GraalVM.
-
 ## Build and Measure Runtimes
 
 The `measure-runtime.sh` Bash Script will build and run of the projects and provide startup times. To run this script the following dependencies are required:
