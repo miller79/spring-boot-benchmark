@@ -2,12 +2,12 @@
 
 ## Introduction
 
-This repository is a small test benchmark for Spring Boot running in Docker.
+This repository is a benchmark for Spring Boot running in Docker.
 It is meant to be a demonstration of the performance concerns with Spring Boot and will hopefully lead to documentation that can focus on the desired solution.
 The end goal of this benchmark is to be the most optimal configured Spring Boot application in relationship to startup time.
 This hopefully will be a demo that could be used for others who are working on the same problem.
 
-An issue for Spring Boot that follows this is available [here](https://github.com/spring-projects/spring-boot/issues/19911).
+An issue for Spring Boot that this was originally created for is [here](https://github.com/spring-projects/spring-boot/issues/19911).
 
 ## Benchmarks Available
 
@@ -37,30 +37,21 @@ This is a Spring Boot application that uses `spring-boot-starter-data-rest`.
 
 This application takes the spring-boot-benchmark-original and adds `camel-activemq-starter`.
 
-### spring-boot-benchmark-keycloak
-
-This application is the spring-boot-benchmark-original with keycloak added.
-
 ### spring-boot-benchmark-all
 
 This application reflects the minimal application with all dependencies added.
 
-## Build and Run Application
+## Build and Measure Runtimes
 
-Go to the folder of the benchmark you would like to run an run the following commands.
+The `measure-runtime.sh` Bash Script will build and run of the projects and provide startup times. To run this script the following dependencies are required:
+
+- Maven 3.6.3+
+- JDK 21+
+- Docker
+
+## Results
+
+Here are the logs of a run from my PC:
 
 ```
-mvn package spring-boot:build-image -Dspring-boot.build-image.imageName=spring-boot-benchmark
-docker run --rm --cpus=".6" -e="BPL_SPRING_CLOUD_BINDINGS_ENABLED=false" -e="JAVA_TOOL_OPTIONS=-XX:ActiveProcessorCount=1" spring-boot-benchmark
 ```
-
-## Stop All Local Running Docker Quickly (PowerShell commands)
-
-```
-docker ps -a -q | % { docker stop $_ }
-docker ps -a -q | % { docker rm $_ }
-```
-
-## Resources
-
-- [spring-boot-benchmark Benchmarks in GKE](spring-boot-benchmark-benchmarks.md)
