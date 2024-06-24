@@ -41,6 +41,10 @@ This application takes the spring-boot-benchmark-original and adds `camel-active
 
 This application reflects the minimal application with all dependencies added.
 
+### spring-boot-benchmark-all-native
+
+This application reflects the minimal application with all dependencies added running with GraalVM.
+
 ## Build and Measure Runtimes
 
 The `measure-runtime.sh` Bash script will build and run all projects and provide startup times. The following dependencies are required to be able to run this script:
@@ -58,6 +62,11 @@ This script builds the applications using `Maven` and the goal `spring-boot:buil
 - --cpus=".6"
 - -e="BPL_SPRING_CLOUD_BINDINGS_ENABLED=false"
 - -e="JAVA_TOOL_OPTIONS=-XX:ActiveProcessorCount=1"
+
+## Issues
+
+- In Camel version 4.6.0, `camel-activemq-starter` uses `activemq-client-jakarta` which is obsoleted by `activemq-client` however it is still included. The projects that use it are excluding it currently and including `spring-boot-starter-activemq` to bring in the new client. I am supposing this will be addressed in a later release.
+- In `spring-boot-benchmark-all-native`, the Application class defines the bean for the `ActiveMQConnectionFactory` directly. From the research that I've seen, the AutoConfiguration for ActiveMQ included `@ConfigurationOnProperty` annotations which is not compatible with GraalVM which does not work out of the box.
 
 ## Results
 

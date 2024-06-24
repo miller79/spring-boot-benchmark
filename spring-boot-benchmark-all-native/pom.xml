@@ -10,7 +10,7 @@
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>miller79</groupId>
-	<artifactId>spring-boot-benchmark-all</artifactId>
+	<artifactId>spring-boot-benchmark-all-native</artifactId>
 	<version>${revision}</version>
 
 	<properties>
@@ -74,6 +74,10 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>org.graalvm.buildtools</groupId>
+				<artifactId>native-maven-plugin</artifactId>
 			</plugin>
 		</plugins>
 	</build>
