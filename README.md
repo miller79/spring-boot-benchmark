@@ -76,28 +76,28 @@ Here are the logs of a run from my PC:
 $ ./measure-runtime.sh
 Building spring-boot-benchmark-original...
 Running spring-boot-benchmark-original...
-2024-06-22T06:49:54.963Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 11.231 seconds (process running for 12.676)
-2024-06-22T06:50:08.652Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 9.309 seconds (process running for 10.488)
-2024-06-22T06:50:24.140Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 9.891 seconds (process running for 11.086)
-2024-06-22T06:50:39.548Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 10.11 seconds (process running for 11.299)
-2024-06-22T06:50:53.433Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 9.31 seconds (process running for 10.591)
-2024-06-22T06:51:08.829Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 9.88 seconds (process running for 11.205)
-2024-06-22T06:51:22.629Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 9.391 seconds (process running for 10.587)
-2024-06-22T06:51:37.013Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 9.099 seconds (process running for 10.198)
-2024-06-22T06:51:50.739Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 9.328 seconds (process running for 10.611)
-2024-06-22T06:52:06.333Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 10.1 seconds (process running for 11.381)
+2024-06-24T04:41:34.911Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 9.892 seconds (process running for 11.698)
+2024-06-24T04:41:47.703Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 8.389 seconds (process running for 9.504)
+2024-06-24T04:42:00.309Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 8.309 seconds (process running for 9.479)
+2024-06-24T04:42:13.816Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 8.216 seconds (process running for 9.303)
+2024-06-24T04:42:26.313Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 8.093 seconds (process running for 9.197)
+2024-06-24T04:42:39.812Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 8.887 seconds (process running for 10.199)
+2024-06-24T04:42:55.106Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 10.708 seconds (process running for 11.98)
+2024-06-24T04:43:07.712Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 7.815 seconds (process running for 9.006)
+2024-06-24T04:43:21.011Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 7.787 seconds (process running for 9.09)
+2024-06-24T04:43:33.504Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 7.909 seconds (process running for 9.087)
 Building spring-boot-benchmark-tomcat...
 Running spring-boot-benchmark-tomcat...
-2024-06-22T06:53:21.927Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 12.101 seconds (process running for 13.476)
-2024-06-22T06:53:38.415Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 10.917 seconds (process running for 12.991)
-2024-06-22T06:53:52.216Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 10.497 seconds (process running for 11.985)
-2024-06-22T06:54:05.097Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 9.902 seconds (process running for 11.193)
-2024-06-22T06:54:16.831Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 9.115 seconds (process running for 10.185)
-2024-06-22T06:54:29.899Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 10.401 seconds (process running for 11.556)
-2024-06-22T06:54:41.613Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 9.083 seconds (process running for 10.078)
-2024-06-22T06:54:54.610Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 10.199 seconds (process running for 11.373)
-2024-06-22T06:55:06.628Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 9.432 seconds (process running for 10.612)
-2024-06-22T06:55:18.607Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 9.007 seconds (process running for 10.366)
+2024-06-24T04:44:43.097Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 16.0 seconds (process running for 18.782)
+2024-06-24T04:45:01.101Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 13.401 seconds (process running for 15.498)
+2024-06-24T04:45:15.315Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 10.923 seconds (process running for 12.313)
+2024-06-24T04:45:30.703Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 11.8 seconds (process running for 13.305)
+2024-06-24T04:45:43.014Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 9.116 seconds (process running for 10.414)
+2024-06-24T04:45:56.489Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 10.382 seconds (process running for 11.671)
+2024-06-24T04:46:08.710Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 9.2 seconds (process running for 10.487)
+2024-06-24T04:46:20.305Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 8.611 seconds (process running for 9.909)
+2024-06-24T04:46:31.600Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 8.51 seconds (process running for 9.69)
+2024-06-24T04:46:44.490Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 9.596 seconds (process running for 11.169)
 Building spring-boot-benchmark-native...
 
   .   ____          _            __ _ _
@@ -109,66 +109,105 @@ Building spring-boot-benchmark-native...
 
  :: Spring Boot ::                (v3.3.1)
 
-2024-06-22T01:55:30.631-05:00  INFO 284 --- [           main] miller79.Application                     : Starting Application using Java 21.0.2 with PID 284 (C:\Users\jisaal1\git\spring-boot-benchmark\spring-boot-benchmark-native\target\classes started by jisaal1 in C:\Users\jisaal1\git\spring-boot-benchmark\spring-boot-benchmark-native)
-2024-06-22T01:55:30.637-05:00  INFO 284 --- [           main] miller79.Application                     : No active profile set, falling back to 1 default profile: "default"
+2024-06-23T23:46:56.193-05:00  INFO 15396 --- [           main] miller79.Application                     : Starting Application using Java 21.0.2 with PID 15396 (C:\Users\jisaal1\git\spring-boot-benchmark\spring-boot-benchmark-native\target\classes started by jisaal1 in C:\Users\jisaal1\git\spring-boot-benchmark\spring-boot-benchmark-native)
+2024-06-23T23:46:56.200-05:00  INFO 15396 --- [           main] miller79.Application                     : No active profile set, falling back to 1 default profile: "default"
 Running spring-boot-benchmark-native...
-2024-06-22T07:06:53.395Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 0.229 seconds (process running for 0.238)
-2024-06-22T07:06:56.432Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 0.088 seconds (process running for 0.094)
-2024-06-22T07:07:00.536Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 0.095 seconds (process running for 0.101)
-2024-06-22T07:07:04.503Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 0.122 seconds (process running for 0.128)
-2024-06-22T07:07:07.703Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 0.109 seconds (process running for 0.115)
-2024-06-22T07:07:10.629Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 0.078 seconds (process running for 0.087)
-2024-06-22T07:07:13.578Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 0.097 seconds (process running for 0.105)
-2024-06-22T07:07:16.605Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 0.151 seconds (process running for 0.158)
-2024-06-22T07:07:20.979Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 0.138 seconds (process running for 0.148)
-2024-06-22T07:07:24.206Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 0.148 seconds (process running for 0.155)
+2024-06-24T04:52:04.830Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 0.202 seconds (process running for 0.212)
+2024-06-24T04:52:09.400Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 0.19 seconds (process running for 0.201)
+2024-06-24T04:52:13.604Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 0.11 seconds (process running for 0.116)
+2024-06-24T04:52:17.171Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 0.207 seconds (process running for 0.215)
+2024-06-24T04:52:20.494Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 0.12 seconds (process running for 0.125)
+2024-06-24T04:52:23.795Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 0.191 seconds (process running for 0.197)
+2024-06-24T04:52:27.190Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 0.121 seconds (process running for 0.128)
+2024-06-24T04:52:30.468Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 0.142 seconds (process running for 0.149)
+2024-06-24T04:52:34.599Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 0.097 seconds (process running for 0.102)
+2024-06-24T04:52:37.778Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 0.147 seconds (process running for 0.158)
 Building spring-boot-benchmark-data-jpa...
 Running spring-boot-benchmark-data-jpa...
-2024-06-22T07:08:56.285Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 20.8 seconds (process running for 22.335)
-2024-06-22T07:09:21.982Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 18.987 seconds (process running for 20.392)
-2024-06-22T07:09:43.785Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 17.379 seconds (process running for 18.605)
-2024-06-22T07:10:04.295Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 15.996 seconds (process running for 17.109)
-2024-06-22T07:10:29.176Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 18.775 seconds (process running for 20.396)
-2024-06-22T07:10:50.795Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 17.195 seconds (process running for 18.417)
-2024-06-22T07:11:13.582Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 17.389 seconds (process running for 18.58)
-2024-06-22T07:11:34.572Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 15.499 seconds (process running for 16.767)
-2024-06-22T07:11:57.671Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 17.994 seconds (process running for 19.068)
-2024-06-22T07:12:17.280Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 15.397 seconds (process running for 16.51)
+2024-06-24T04:53:45.772Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 16.191 seconds (process running for 18.062)
+2024-06-24T04:54:06.192Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 15.316 seconds (process running for 16.388)
+2024-06-24T04:54:27.393Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 15.526 seconds (process running for 16.822)
+2024-06-24T04:54:49.077Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 15.801 seconds (process running for 17.299)
+2024-06-24T04:55:10.180Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 15.303 seconds (process running for 16.776)
+2024-06-24T04:55:32.572Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 16.787 seconds (process running for 18.085)
+2024-06-24T04:55:53.589Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 15.8 seconds (process running for 17.41)
+2024-06-24T04:56:14.665Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 15.567 seconds (process running for 16.793)
+2024-06-24T04:56:35.372Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 15.207 seconds (process running for 16.506)
+2024-06-24T04:56:56.674Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 15.808 seconds (process running for 17.011)
 Building spring-boot-benchmark-data-rest...
 Running spring-boot-benchmark-data-rest...
-2024-06-22T07:13:50.860Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 26.391 seconds (process running for 27.995)
-2024-06-22T07:14:14.876Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 21.015 seconds (process running for 22.406)
-2024-06-22T07:14:41.559Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 23.796 seconds (process running for 25.066)
-2024-06-22T07:15:04.072Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 19.699 seconds (process running for 20.903)
-2024-06-22T07:15:25.975Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 19.193 seconds (process running for 20.357)
-2024-06-22T07:15:49.859Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 20.997 seconds (process running for 22.253)
-2024-06-22T07:16:14.266Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 21.587 seconds (process running for 22.777)
-2024-06-22T07:16:39.555Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 21.992 seconds (process running for 23.381)
-2024-06-22T07:17:02.976Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 20.105 seconds (process running for 21.492)
-2024-06-22T07:17:24.376Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 18.616 seconds (process running for 19.807)
+2024-06-24T04:58:10.764Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 24.798 seconds (process running for 26.592)
+2024-06-24T04:58:31.455Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 17.681 seconds (process running for 18.96)
+2024-06-24T04:58:54.377Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 19.923 seconds (process running for 21.305)
+2024-06-24T04:59:17.154Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 18.988 seconds (process running for 20.592)
+2024-06-24T04:59:39.267Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 18.904 seconds (process running for 20.386)
+2024-06-24T05:00:08.244Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 25.781 seconds (process running for 27.286)
+2024-06-24T05:00:38.063Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 22.514 seconds (process running for 26.011)
+2024-06-24T05:00:58.940Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 17.787 seconds (process running for 19.09)
+2024-06-24T05:01:26.852Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 24.486 seconds (process running for 26.192)
+2024-06-24T05:01:48.457Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 18.506 seconds (process running for 19.781)
 Building spring-boot-benchmark-camel-activemq...
 Running spring-boot-benchmark-camel-activemq...
-2024-06-22T07:18:49.471Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 15.691 seconds (process running for 17.074)
-2024-06-22T07:19:05.989Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 13.319 seconds (process running for 14.709)
-2024-06-22T07:19:21.069Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 12.391 seconds (process running for 13.492)
-2024-06-22T07:19:36.287Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 12.296 seconds (process running for 13.408)
-2024-06-22T07:19:52.170Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 13.093 seconds (process running for 14.294)
-2024-06-22T07:20:08.677Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 13.61 seconds (process running for 14.891)
-2024-06-22T07:20:24.074Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 12.506 seconds (process running for 13.763)
-2024-06-22T07:20:40.767Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 13.779 seconds (process running for 14.984)
-2024-06-22T07:20:57.973Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 14.298 seconds (process running for 15.576)
-2024-06-22T07:21:13.875Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 13.075 seconds (process running for 14.359)
+2024-06-24T05:02:51.355Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 14.113 seconds (process running for 16.296)
+2024-06-24T05:03:06.451Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 11.994 seconds (process running for 13.314)
+2024-06-24T05:03:22.146Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 12.48 seconds (process running for 13.876)
+2024-06-24T05:03:37.336Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 12.185 seconds (process running for 13.372)
+2024-06-24T05:03:52.728Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 12.278 seconds (process running for 13.67)
+2024-06-24T05:04:07.945Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 12.203 seconds (process running for 13.513)
+2024-06-24T05:04:23.334Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 11.999 seconds (process running for 13.393)
+2024-06-24T05:04:38.824Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 11.896 seconds (process running for 13.473)
+2024-06-24T05:04:57.541Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 15.388 seconds (process running for 16.9)
+2024-06-24T05:05:15.044Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 13.816 seconds (process running for 15.316)
 Building spring-boot-benchmark-all...
 Running spring-boot-benchmark-all...
-2024-06-22T07:22:44.085Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 26.717 seconds (process running for 28.283)
-2024-06-22T07:23:10.972Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 23.811 seconds (process running for 25.107)
-2024-06-22T07:23:38.275Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 24.41 seconds (process running for 25.612)
-2024-06-22T07:24:06.065Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 24.701 seconds (process running for 26.051)
-2024-06-22T07:24:33.866Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 24.588 seconds (process running for 25.802)
-2024-06-22T07:25:00.362Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 23.207 seconds (process running for 24.788)
-2024-06-22T07:25:27.370Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 24.107 seconds (process running for 25.314)
-2024-06-22T07:25:55.979Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 25.018 seconds (process running for 26.675)
-2024-06-22T07:26:32.759Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 33.481 seconds (process running for 35.16)
-2024-06-22T07:27:02.453Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 26.287 seconds (process running for 27.781)
+2024-06-24T05:06:42.508Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 35.571 seconds (process running for 37.259)
+2024-06-24T05:07:17.324Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 30.984 seconds (process running for 32.679)
+2024-06-24T05:07:43.729Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 23.213 seconds (process running for 24.523)
+2024-06-24T05:08:11.112Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 24.01 seconds (process running for 25.376)
+2024-06-24T05:08:40.806Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 26.086 seconds (process running for 27.587)
+2024-06-24T05:09:13.797Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 29.272 seconds (process running for 30.877)
+2024-06-24T05:09:41.920Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 23.814 seconds (process running for 25.699)
+2024-06-24T05:10:09.807Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 24.794 seconds (process running for 26.169)
+2024-06-24T05:10:40.095Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 26.379 seconds (process running for 28.079)
+2024-06-24T05:11:15.612Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 31.714 seconds (process running for 33.419)
+Building spring-boot-benchmark-all-native...
 
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.3.1)
+
+2024-06-24T00:11:30.975-05:00  INFO 11192 --- [           main] miller79.Application                     : Starting Application using Java 21.0.2 with PID 11192 (C:\Users\jisaal1\git\spring-boot-benchmark\spring-boot-benchmark-all-native\target\classes started by jisaal1 in C:\Users\jisaal1\git\spring-boot-benchmark\spring-boot-benchmark-all-native)
+2024-06-24T00:11:30.982-05:00  INFO 11192 --- [           main] miller79.Application                     : No active profile set, falling back to 1 default profile: "default"
+2024-06-24T00:11:33.353-05:00  INFO 11192 --- [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2024-06-24T00:11:33.400-05:00  INFO 11192 --- [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 28 ms. Found 0 JPA repository interfaces.
+2024-06-24T00:11:37.246-05:00  INFO 11192 --- [           main] rocessor$ProxyRegisteringAotContribution : Created proxy type class miller79.HelloWorld$$SpringCGLIB$$0 for class miller79.HelloWorld
+2024-06-24T00:11:37.402-05:00  INFO 11192 --- [           main] rocessor$ProxyRegisteringAotContribution : Created proxy type class org.springframework.boot.autoconfigure.web.servlet.error.BasicErrorController$$SpringCGLIB$$0 for class org.springframework.boot.autoconfigure.web.servlet.error.BasicErrorController
+2024-06-24T00:11:37.861-05:00  INFO 11192 --- [           main] rocessor$ProxyRegisteringAotContribution : Created proxy type class org.springframework.data.rest.webmvc.RepositoryController$$SpringCGLIB$$0 for class org.springframework.data.rest.webmvc.RepositoryController
+2024-06-24T00:11:37.891-05:00  INFO 11192 --- [           main] rocessor$ProxyRegisteringAotContribution : Created proxy type class org.springframework.data.rest.webmvc.RepositoryEntityController$$SpringCGLIB$$0 for class org.springframework.data.rest.webmvc.RepositoryEntityController
+2024-06-24T00:11:37.940-05:00  INFO 11192 --- [           main] rocessor$ProxyRegisteringAotContribution : Created proxy type class org.springframework.data.rest.webmvc.RepositoryPropertyReferenceController$$SpringCGLIB$$0 for class org.springframework.data.rest.webmvc.RepositoryPropertyReferenceController
+2024-06-24T00:11:37.956-05:00  INFO 11192 --- [           main] rocessor$ProxyRegisteringAotContribution : Created proxy type class org.springframework.data.rest.webmvc.RepositorySearchController$$SpringCGLIB$$0 for class org.springframework.data.rest.webmvc.RepositorySearchController
+2024-06-24T00:11:37.997-05:00  INFO 11192 --- [           main] rocessor$ProxyRegisteringAotContribution : Created proxy type class org.springframework.data.rest.webmvc.RepositorySchemaController$$SpringCGLIB$$0 for class org.springframework.data.rest.webmvc.RepositorySchemaController
+2024-06-24T00:11:38.009-05:00  INFO 11192 --- [           main] rocessor$ProxyRegisteringAotContribution : Created proxy type class org.springframework.data.rest.webmvc.alps.AlpsController$$SpringCGLIB$$0 for class org.springframework.data.rest.webmvc.alps.AlpsController
+2024-06-24T00:11:38.022-05:00  INFO 11192 --- [           main] rocessor$ProxyRegisteringAotContribution : Created proxy type class org.springframework.data.rest.webmvc.ProfileController$$SpringCGLIB$$0 for class org.springframework.data.rest.webmvc.ProfileController
+2024-06-24T00:11:38.042-05:00  INFO 11192 --- [           main] o.springframework.hateoas.aot.AotUtils   : Registering Spring HATEOAS types in org.springframework.hateoas.mediatype.hal for reflection.
+2024-06-24T00:11:38.101-05:00  INFO 11192 --- [           main] o.springframework.hateoas.aot.AotUtils   : Registering Spring HATEOAS types in org.springframework.hateoas.mediatype.hal.forms for reflection.
+2024-06-24T00:11:38.134-05:00  INFO 11192 --- [           main] o.springframework.hateoas.aot.AotUtils   : Registering Spring HATEOAS types in org.springframework.hateoas.mediatype.alps for reflection.
+2024-06-24T00:11:38.174-05:00  INFO 11192 --- [           main] o.springframework.hateoas.aot.AotUtils   : Registering Spring HATEOAS types in org.springframework.hateoas.mediatype.problem for reflection.
+2024-06-24T00:11:38.655-05:00  INFO 11192 --- [           main] o.springframework.hateoas.aot.AotUtils   : Registering Spring HATEOAS types in org.springframework.hateoas for reflection.
+Running spring-boot-benchmark-all-native...
+2024-06-24T05:22:17.658Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 1.594 seconds (process running for 1.602)
+2024-06-24T05:22:20.828Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 1.799 seconds (process running for 1.809)
+2024-06-24T05:22:23.242Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 1.281 seconds (process running for 1.29)
+2024-06-24T05:22:25.751Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 1.419 seconds (process running for 1.425)
+2024-06-24T05:22:28.138Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 1.152 seconds (process running for 1.158)
+2024-06-24T05:22:30.979Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 1.533 seconds (process running for 1.542)
+2024-06-24T05:22:33.356Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 1.215 seconds (process running for 1.221)
+2024-06-24T05:22:35.738Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 1.322 seconds (process running for 1.329)
+2024-06-24T05:22:38.050Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 1.31 seconds (process running for 1.316)
+2024-06-24T05:22:40.553Z  INFO 1 --- [           main] miller79.Application                     : Started Application in 1.405 seconds (process running for 1.413)
 ```
