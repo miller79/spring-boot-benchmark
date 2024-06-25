@@ -13,7 +13,7 @@ executeTest () {
   echo "Running $1..."
   for i in {1..10}
   do
-    echo "`(docker run --rm --cpus=".6" -e="BPL_SPRING_CLOUD_BINDINGS_ENABLED=false" -e="JAVA_TOOL_OPTIONS=-XX:ActiveProcessorCount=1" docker.io/library/$1:LOCAL-SNAPSHOT) 2>&1 | grep "Started Application in"`"
+    echo "`(docker run --rm --cpus=".6" -e="BPL_SPRING_CLOUD_BINDINGS_ENABLED=false" -e="JAVA_TOOL_OPTIONS=-XX:ActiveProcessorCount=1" docker.io/library/$1:LOCAL-SNAPSHOT) 2>&1 | grep "Started Application in" | sed 's/^.*\(Started Application in.*\).*$/\1/'`"
   done
 }
 
