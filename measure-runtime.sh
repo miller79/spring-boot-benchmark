@@ -7,6 +7,7 @@
 set -e
 
 declare -A results
+declare totalTests=10
 
 calculateStats() {
   local -a values=("$@")
@@ -78,25 +79,23 @@ abstractProcessTimes () {
 }
 
 buildAndRunTest () {
-  local totalTests=2
   local projectName="$1"
   local projectType="$2"
-  local additionalMavenOptions="$3"
   local fullProjectName="$projectName-$projectType"
   local -a testRawResults
   local -a testStartupTimes
   local -a testProcessTimes
 
   echo "Building $fullProjectName..."
-  mvn -f $projectName/pom.xml $additionalMavenOptions clean spring-boot:build-image
+  mvn -f $projectName/pom.xml -P$projectType clean spring-boot:build-image
   
   echo "Running $fullProjectName for logging purposes..."
-  docker run --rm --cpus=".6" -e="BPL_SPRING_CLOUD_BINDINGS_ENABLED=false" -e="JAVA_TOOL_OPTIONS=-XX:ActiveProcessorCount=1" docker.io/library/$projectName:LOCAL-SNAPSHOT
+  docker run --rm --cpus=".6" -e="JAVA_TOOL_OPTIONS=-XX:ActiveProcessorCount=1" docker.io/library/$projectName:LOCAL-SNAPSHOT
 
   echo "Running $fullProjectName for benchmarking..."
   for (( i = 0; i < $totalTests; i++))
   do
-    testRawResults[$i]=$(docker run --rm --cpus=".6" -e="BPL_SPRING_CLOUD_BINDINGS_ENABLED=false" -e="JAVA_TOOL_OPTIONS=-XX:ActiveProcessorCount=1" docker.io/library/$projectName:LOCAL-SNAPSHOT 2>&1 | grep "Started Application in" | sed 's/^.*\(Started Application in.*\).*$/\1/')
+    testRawResults[$i]=$(docker run --rm --cpus=".6" -e="JAVA_TOOL_OPTIONS=-XX:ActiveProcessorCount=1" docker.io/library/$projectName:LOCAL-SNAPSHOT 2>&1 | grep "Started Application in" | sed 's/^.*\(Started Application in.*\).*$/\1/')
     echo ${testRawResults[$i]}
   done
   
@@ -109,11 +108,11 @@ buildAndRunTest () {
 executeTest () {
   local projectName="$1"
 
-  buildAndRunTest $1 "plain" ""
-  buildAndRunTest $1 "aot" "-Paot"
-  buildAndRunTest $1 "cds" "-Pcds"
-  buildAndRunTest $1 "aot+cds" "-Paot+cds"
- # buildAndRunTest $1 "native" "-Pnative"
+  buildAndRunTest $1 "plain"
+  buildAndRunTest $1 "aot"
+  buildAndRunTest $1 "cds"
+  buildAndRunTest $1 "aot+cds"
+  buildAndRunTest $1 "native"
 }
 
 printMultipleCharacters () {
@@ -130,19 +129,19 @@ printMultipleCharacters () {
 
 showResults () {
   # The total length of the table
-  local length=110
+  local length=120
 
   printf "\n\n"
   printMultipleCharacters "=" $length
-  printf "|| %-104s ||\n" "Final Results"
+  printf "|| %-114s ||\n" "Final Results"
   printMultipleCharacters "=" $length
-  printf "| %-40s | %-30s | %-30s |\n" "Application" "Startup Time:" "Process Time:"
-  printf "| %-40s | %-30s | %-30s |\n" "" "Min, Max, Average" "Min, Max, Average"
+  printf "| %-50s | %-30s | %-30s |\n" "Application" "Startup Time:" "Process Time:"
+  printf "| %-50s | %-30s | %-30s |\n" "" "Min, Max, Average" "Min, Max, Average"
 
   for key in "${!results[@]}"
   do
     printMultipleCharacters "-" $length
-    printf "| %-40s | %-30s | %-30s |\n" "$key" "${results[$key]%%|*}" "${results[$key]#*|}"
+    printf "| %-50s | %-30s | %-30s |\n" "$key" "${results[$key]%%|*}" "${results[$key]#*|}"
   done
 
   printMultipleCharacters "-" $length

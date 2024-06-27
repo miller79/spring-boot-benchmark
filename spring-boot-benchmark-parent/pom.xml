@@ -20,9 +20,38 @@
 
 	<profiles>
 		<profile>
+			<id>plain</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.springframework.boot</groupId>
+						<artifactId>spring-boot-maven-plugin</artifactId>
+						<configuration>
+							<image>
+								<env>
+									<BP_SPRING_CLOUD_BINDINGS_DISABLED>true</BP_SPRING_CLOUD_BINDINGS_DISABLED>
+								</env>
+							</image>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
 			<id>native</id>
 			<build>
 				<plugins>
+					<plugin>
+						<groupId>org.springframework.boot</groupId>
+						<artifactId>spring-boot-maven-plugin</artifactId>
+						<configuration>
+							<image>
+								<env>
+									<BP_SPRING_CLOUD_BINDINGS_DISABLED>true</BP_SPRING_CLOUD_BINDINGS_DISABLED>
+								</env>
+							</image>
+						</configuration>
+					</plugin>
 					<plugin>
 						<groupId>org.graalvm.buildtools</groupId>
 						<artifactId>native-maven-plugin</artifactId>
@@ -49,6 +78,7 @@
 							<image>
 								<env>
 									<BP_SPRING_AOT_ENABLED>true</BP_SPRING_AOT_ENABLED>
+									<BP_SPRING_CLOUD_BINDINGS_DISABLED>true</BP_SPRING_CLOUD_BINDINGS_DISABLED>
 								</env>
 							</image>
 						</configuration>
@@ -67,6 +97,7 @@
 							<image>
 								<env>
 									<BP_JVM_CDS_ENABLED>true</BP_JVM_CDS_ENABLED>
+									<BP_SPRING_CLOUD_BINDINGS_DISABLED>true</BP_SPRING_CLOUD_BINDINGS_DISABLED>
 								</env>
 							</image>
 						</configuration>
@@ -94,6 +125,7 @@
 								<env>
 									<BP_JVM_CDS_ENABLED>true</BP_JVM_CDS_ENABLED>
 									<BP_SPRING_AOT_ENABLED>true</BP_SPRING_AOT_ENABLED>
+									<BP_SPRING_CLOUD_BINDINGS_DISABLED>true</BP_SPRING_CLOUD_BINDINGS_DISABLED>
 								</env>
 							</image>
 						</configuration>
