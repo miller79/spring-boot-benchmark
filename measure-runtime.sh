@@ -7,6 +7,8 @@
 set -e
 
 declare -A results
+declare -a resultsOrdered
+declare currentResult=0
 declare totalTests=10
 
 calculateStats() {
@@ -78,6 +80,15 @@ abstractProcessTimes () {
   echo ${testProcessTimes[@]}
 }
 
+addResults () {
+  local arrayVal="$1"
+  local calculatedVal="$2"
+
+  results[$arrayVal]="$calculatedVal"
+  resultsOrdered[$currentResult]="$arrayVal"
+  currentResult+=1
+}
+
 buildAndRunTest () {
   local projectName="$1"
   local projectType="$2"
@@ -102,7 +113,7 @@ buildAndRunTest () {
   testStartupTimes=$(abstractStartupTimes "${testRawResults[@]}")
   testProcessTimes=$(abstractProcessTimes "${testRawResults[@]}")
 
-  results["$fullProjectName"]="$(calculateStats ${testStartupTimes[@]}) | $(calculateStats ${testProcessTimes[@]})"
+  addResults "$fullProjectName" "$(calculateStats ${testStartupTimes[@]}) | $(calculateStats ${testProcessTimes[@]})"
 }
 
 executeTest () {
@@ -138,7 +149,7 @@ showResults () {
   printf "| %-50s | %-30s | %-30s |\n" "Application" "Startup Time:" "Process Time:"
   printf "| %-50s | %-30s | %-30s |\n" "" "Min, Max, Average" "Min, Max, Average"
 
-  for key in "${!results[@]}"
+  for key in "${resultsOrdered[@]}"
   do
     printMultipleCharacters "-" $length
     printf "| %-50s | %-30s | %-30s |\n" "$key" "${results[$key]%%|*}" "${results[$key]#*|}"
