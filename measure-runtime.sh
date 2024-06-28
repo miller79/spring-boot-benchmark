@@ -98,15 +98,15 @@ buildAndRunTest () {
   local -a testProcessTimes
 
   echo "Building $fullProjectName..."
-  mvn -f $projectName/pom.xml -P$projectType clean spring-boot:build-image
+  mvn -f $projectName/pom.xml -P$projectType clean spring-boot:build-image -DimageName=$fullProjectName
   
   echo "Running $fullProjectName for logging purposes..."
-  docker run --rm --cpus=".6" -e="JAVA_TOOL_OPTIONS=-XX:ActiveProcessorCount=1" docker.io/library/$projectName:LOCAL-SNAPSHOT
+  docker run --rm --cpus=".6" -e="JAVA_TOOL_OPTIONS=-XX:ActiveProcessorCount=1" docker.io/library/$fullProjectName:LOCAL-SNAPSHOT
 
   echo "Running $fullProjectName for benchmarking..."
   for (( i = 0; i < $totalTests; i++))
   do
-    testRawResults[$i]=$(docker run --rm --cpus=".6" -e="JAVA_TOOL_OPTIONS=-XX:ActiveProcessorCount=1" docker.io/library/$projectName:LOCAL-SNAPSHOT 2>&1 | grep "Started Application in" | sed 's/^.*\(Started Application in.*\).*$/\1/')
+    testRawResults[$i]=$(docker run --rm --cpus=".6" -e="JAVA_TOOL_OPTIONS=-XX:ActiveProcessorCount=1" docker.io/library/$fullProjectName:LOCAL-SNAPSHOT 2>&1 | grep "Started Application in" | sed 's/^.*\(Started Application in.*\).*$/\1/')
     echo ${testRawResults[$i]}
   done
   
@@ -122,7 +122,7 @@ executeTest () {
   buildAndRunTest $1 "plain"
   buildAndRunTest $1 "aot"
   buildAndRunTest $1 "cds"
-  buildAndRunTest $1 "aot+cds"
+  buildAndRunTest $1 "aot-cds"
   buildAndRunTest $1 "native"
 }
 
