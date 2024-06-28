@@ -86,7 +86,7 @@ addResults () {
 
   results[$arrayVal]="$calculatedVal"
   resultsOrdered[$currentResult]="$arrayVal"
-  currentResult+=1
+  currentResult=$((currentResult+1))
 }
 
 buildAndRunTest () {
