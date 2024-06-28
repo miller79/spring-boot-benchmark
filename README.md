@@ -54,7 +54,7 @@ This script builds the applications using `Maven` and the goal `spring-boot:buil
 - plain - Builds without any customization
 - aot - Builds with AOT enabled
 - cds - Builds with CDS enabled
-- aot+cds - Builds with CDS and AOT enabled
+- aot-cds - Builds with CDS and AOT enabled
 - native - Builds with native enabled
 
 Once the application is built, the script will run the application ten times with the following settings:
