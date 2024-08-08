@@ -1,5 +1,18 @@
 # Spring Boot Benchmark
 
+- [Spring Boot Benchmark](#spring-boot-benchmark)
+  - [Introduction](#introduction)
+  - [Benchmarks Available](#benchmarks-available)
+    - [spring-boot-benchmark-original](#spring-boot-benchmark-original)
+    - [spring-boot-benchmark-tomcat](#spring-boot-benchmark-tomcat)
+    - [spring-boot-benchmark-data-jpa](#spring-boot-benchmark-data-jpa)
+    - [spring-boot-benchmark-data-rest](#spring-boot-benchmark-data-rest)
+    - [spring-boot-benchmark-camel-activemq](#spring-boot-benchmark-camel-activemq)
+    - [spring-boot-benchmark-all](#spring-boot-benchmark-all)
+  - [Build and Measure Runtimes](#build-and-measure-runtimes)
+  - [Issues](#issues)
+  - [Results](#results)
+
 ## Introduction
 
 This repository is a benchmark for Spring Boot running in Docker.
