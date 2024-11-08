@@ -4,4 +4,4 @@ updates:
     directories: 
       - "/spring-boot-benchmark-*"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
