@@ -13,7 +13,7 @@
 	<artifactId>spring-boot-benchmark-all</artifactId>
 
 	<properties>
-		<camel.version>4.7.0</camel.version>
+		<camel.version>4.8.1</camel.version>
 	</properties>
 
 	<dependencies>
