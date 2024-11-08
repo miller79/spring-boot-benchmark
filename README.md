@@ -75,10 +75,6 @@ Once the application is built, the script will run the application ten times wit
 - --cpus=".6"
 - -e="JAVA_TOOL_OPTIONS=-XX:ActiveProcessorCount=1"
 
-## Issues
-
-- In Camel version 4.7.0, `camel-activemq-starter` uses `activemq-client-jakarta` which is obsoleted by `activemq-client` however it is still included. The projects that use it are excluding it currently and including `spring-boot-starter-activemq` to bring in the new client. I am supposing this will be addressed in a later release.
-
 ## Results
 
 Here are the final results of a run from my PC:

@@ -112,8 +112,10 @@ buildAndRunTest () {
   
   testStartupTimes=$(abstractStartupTimes "${testRawResults[@]}")
   testProcessTimes=$(abstractProcessTimes "${testRawResults[@]}")
+  calculatedStartupTimes=$(calculateStats ${testStartupTimes[@]})
+  calculatedProcessTimes=$(calculateStats ${testProcessTimes[@]})
 
-  addResults "$fullProjectName" "$(calculateStats ${testStartupTimes[@]}) | $(calculateStats ${testProcessTimes[@]})"
+  addResults "$fullProjectName" "$calculatedStartupTimes | $calculatedProcessTimes"
 }
 
 executeTest () {
@@ -123,6 +125,7 @@ executeTest () {
   buildAndRunTest $1 "aot"
   buildAndRunTest $1 "cds"
   buildAndRunTest $1 "aot-cds"
+  buildAndRunTest $1 "alpaquita"
   buildAndRunTest $1 "native"
 }
 
