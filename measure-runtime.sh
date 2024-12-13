@@ -98,7 +98,7 @@ buildAndRunTest () {
   local -a testProcessTimes
 
   echo "Building $fullProjectName..."
-  mvn -f $projectName/pom.xml -P$projectType clean spring-boot:build-image -DimageName=$fullProjectName
+  $projectName/mvnw -f $projectName/pom.xml -P$projectType clean spring-boot:build-image -DimageName=$fullProjectName
   
   echo "Running $fullProjectName for logging purposes..."
   docker run --rm --cpus=".6" -e="JAVA_TOOL_OPTIONS=-XX:ActiveProcessorCount=1" docker.io/library/$fullProjectName:LOCAL-SNAPSHOT
