@@ -13,7 +13,7 @@
     <artifactId>spring-boot-benchmark-camel-activemq</artifactId>
 
     <properties>
-        <camel.version>4.9.0</camel.version>
+        <camel.version>4.10.3</camel.version>
     </properties>
 
     <dependencies>
