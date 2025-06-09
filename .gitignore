@@ -4,3 +4,5 @@
 /.settings/
 /.sts4-cache/
 /target/
+/spring-boot-benchmark-parent/.settings
+spring-boot-benchmark-parent/.project
