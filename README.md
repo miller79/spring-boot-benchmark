@@ -7,7 +7,7 @@
     - [spring-boot-benchmark-tomcat](#spring-boot-benchmark-tomcat)
     - [spring-boot-benchmark-data-jpa](#spring-boot-benchmark-data-jpa)
     - [spring-boot-benchmark-data-rest](#spring-boot-benchmark-data-rest)
-    - [spring-boot-benchmark-camel-activemq](#spring-boot-benchmark-camel-activemq)
+    - [spring-boot-benchmark-activemq](#spring-boot-benchmark-activemq)
     - [spring-boot-benchmark-all](#spring-boot-benchmark-all)
   - [Build and Measure Runtimes](#build-and-measure-runtimes)
   - [Results](#results)
@@ -41,9 +41,9 @@ This application is a Spring Boot application that uses `spring-boot-starter-dat
 
 This application is a Spring Boot application that uses `spring-boot-starter-data-rest`.
 
-### spring-boot-benchmark-camel-activemq
+### spring-boot-benchmark-activemq
 
-This application takes the spring-boot-benchmark-original and adds `camel-activemq-starter`.
+This application takes the spring-boot-benchmark-original and adds `spring-boot-starter-activemq`.
 
 ### spring-boot-benchmark-all
 
@@ -53,7 +53,7 @@ This application reflects the minimal application with all dependencies added.
 
 The `measure-runtime.sh` Bash script will build and run all projects and provide startup times. The following dependencies are required to be able to run this script:
 
-- JDK 21+
+- JDK 25+
 - Docker
 
 Each application starts up and stops itself by running the following method in the main class of each application:
@@ -76,7 +76,7 @@ Once the application is built, the script will run the application ten times wit
 
 ## Results
 
-Here are the final results of a run from my PC (last ran 12/13/2024):
+Here are the final results of a run from my PC (last ran 11/25/2025):
 
 ```
 ========================================================================================================================
@@ -85,76 +85,76 @@ Here are the final results of a run from my PC (last ran 12/13/2024):
 | Application                                        | Startup Time:                  | Process Time:                  |
 |                                                    | Min, Max, Average              | Min, Max, Average              |
 ------------------------------------------------------------------------------------------------------------------------
-| spring-boot-benchmark-original-plain               | 9.491, 24.509, 12.6429         |  10.9, 28.604, 14.4257         |
+| spring-boot-benchmark-original-plain               | 6.516, 7.614, 6.9799           |  7.492, 8.681, 7.9772          |
 ------------------------------------------------------------------------------------------------------------------------
-| spring-boot-benchmark-original-aot                 | 5.619, 13.597, 7.216           |  6.593, 17.603, 8.6244         |
+| spring-boot-benchmark-original-aot                 | 5.704, 7.098, 6.1168           |  6.772, 8.189, 7.1913          |
 ------------------------------------------------------------------------------------------------------------------------
-| spring-boot-benchmark-original-cds                 | 5.106, 11.42, 6.3156           |  5.615, 13.484, 7.087          |
+| spring-boot-benchmark-original-cds                 | 4.388, 6.179, 4.924            |  4.888, 6.775, 5.4644          |
 ------------------------------------------------------------------------------------------------------------------------
-| spring-boot-benchmark-original-aot-cds             | 3.302, 10.79, 5.1467           |  3.806, 11.684, 5.831          |
+| spring-boot-benchmark-original-aot-cds             | 2.993, 3.492, 3.1848           |  3.496, 4.074, 3.7259          |
 ------------------------------------------------------------------------------------------------------------------------
-| spring-boot-benchmark-original-alpaquita           | 8.005, 9.174, 8.2956           |  9.095, 10.298, 9.4848         |
+| spring-boot-benchmark-original-alpaquita           | 6.303, 9.006, 7.4432           |  7.296, 10.111, 8.5685         |
 ------------------------------------------------------------------------------------------------------------------------
-| spring-boot-benchmark-original-native              | 0.068, 0.181, 0.1294           |  0.075, 0.19, 0.1364           |
+| spring-boot-benchmark-original-native              | 0.058, 0.123, 0.0826           |  0.063, 0.13, 0.0879           |
 ------------------------------------------------------------------------------------------------------------------------
-| spring-boot-benchmark-tomcat-plain                 | 8.205, 12.385, 9.1766          |  9.106, 13.884, 10.239         |
+| spring-boot-benchmark-tomcat-plain                 | 6.806, 7.402, 7.1161           |  7.708, 8.29, 8.0054           |
 ------------------------------------------------------------------------------------------------------------------------
-| spring-boot-benchmark-tomcat-aot                   | 6.3, 12.113, 7.4787            |  7.274, 14.478, 8.633          |
+| spring-boot-benchmark-tomcat-aot                   | 5.301, 5.995, 5.5974           |  6.19, 6.98, 6.5058            |
 ------------------------------------------------------------------------------------------------------------------------
-| spring-boot-benchmark-tomcat-cds                   | 5.389, 13.594, 6.804           |  5.901, 14.47, 7.3983          |
+| spring-boot-benchmark-tomcat-cds                   | 4.414, 5.387, 4.6949           |  4.879, 5.864, 5.1563          |
 ------------------------------------------------------------------------------------------------------------------------
-| spring-boot-benchmark-tomcat-aot-cds               | 3.821, 9.009, 5.0868           |  4.389, 9.907, 5.7382          |
+| spring-boot-benchmark-tomcat-aot-cds               | 3.108, 3.776, 3.3864           |  3.602, 4.258, 3.8317          |
 ------------------------------------------------------------------------------------------------------------------------
-| spring-boot-benchmark-tomcat-alpaquita             | 8.697, 9.214, 9.0449           |  9.863, 10.475, 10.2211        |
+| spring-boot-benchmark-tomcat-alpaquita             | 6.885, 7.611, 7.2097           |  7.87, 8.7, 8.2298             |
 ------------------------------------------------------------------------------------------------------------------------
-| spring-boot-benchmark-tomcat-native                | 0.088, 0.274, 0.1482           |  0.093, 0.284, 0.1541          |
+| spring-boot-benchmark-tomcat-native                | 0.077, 0.178, 0.1123           |  0.082, 0.185, 0.119           |
 ------------------------------------------------------------------------------------------------------------------------
-| spring-boot-benchmark-data-jpa-plain               | 14.811, 20.71, 18.2597         |  15.896, 22.708, 19.5969       |
+| spring-boot-benchmark-data-jpa-plain               | 11.313, 13.004, 11.8061        |  12.466, 14.009, 12.861        |
 ------------------------------------------------------------------------------------------------------------------------
-| spring-boot-benchmark-data-jpa-aot                 | 12.293, 16.494, 14.2767        |  13.375, 18.275, 15.5535       |
+| spring-boot-benchmark-data-jpa-aot                 | 9.383, 10.092, 9.8443          |  10.401, 11.193, 10.8648       |
 ------------------------------------------------------------------------------------------------------------------------
-| spring-boot-benchmark-data-jpa-cds                 | 8.796, 17.815, 10.3555         |  9.373, 20.094, 11.2003        |
+| spring-boot-benchmark-data-jpa-cds                 | 6.283, 7.305, 6.546            |  6.863, 7.889, 7.1243          |
 ------------------------------------------------------------------------------------------------------------------------
-| spring-boot-benchmark-data-jpa-aot-cds             | 7.003, 12.39, 8.1563           |  7.676, 14.686, 9.0652         |
+| spring-boot-benchmark-data-jpa-aot-cds             | 4.78, 5.185, 4.9045            |  5.369, 5.801, 5.5022          |
 ------------------------------------------------------------------------------------------------------------------------
-| spring-boot-benchmark-data-jpa-alpaquita           | 14.789, 17.397, 15.7205        |  16.097, 18.689, 17.0299       |
+| spring-boot-benchmark-data-jpa-alpaquita           | 11.71, 20.292, 14.4133         |  12.878, 24.805, 15.961        |
 ------------------------------------------------------------------------------------------------------------------------
-| spring-boot-benchmark-data-jpa-native              | 0.403, 0.859, 0.5791           |  0.409, 0.872, 0.5859          |
+| spring-boot-benchmark-data-jpa-native              | 0.259, 0.489, 0.3248           |  0.266, 0.504, 0.3331          |
 ------------------------------------------------------------------------------------------------------------------------
-| spring-boot-benchmark-data-rest-plain              | 18.608, 19.897, 19.3562        |  19.696, 21.088, 20.541        |
+| spring-boot-benchmark-data-rest-plain              | 13.899, 16.113, 15.1825        |  15.094, 17.412, 16.3523       |
 ------------------------------------------------------------------------------------------------------------------------
-| spring-boot-benchmark-data-rest-aot                | 14.798, 23.202, 16.9567        |  15.801, 25.387, 18.2161       |
+| spring-boot-benchmark-data-rest-aot                | 12.505, 14.475, 13.4532        |  13.421, 15.702, 14.6098       |
 ------------------------------------------------------------------------------------------------------------------------
-| spring-boot-benchmark-data-rest-cds                | 11.106, 15.608, 13.5061        |  11.776, 16.406, 14.2652       |
+| spring-boot-benchmark-data-rest-cds                | 8.404, 10.599, 9.5891          |  8.985, 11.302, 10.2464        |
 ------------------------------------------------------------------------------------------------------------------------
-| spring-boot-benchmark-data-rest-aot-cds            | 10.417, 15.812, 12.0309        |  11.282, 16.988, 12.9876       |
+| spring-boot-benchmark-data-rest-aot-cds            | 6.708, 8.211, 7.1646           |  7.401, 8.972, 7.8055          |
 ------------------------------------------------------------------------------------------------------------------------
-| spring-boot-benchmark-data-rest-alpaquita          | 17.791, 22.593, 19.6793        |  18.991, 24.602, 21.1202       |
+| spring-boot-benchmark-data-rest-alpaquita          | 15.522, 18.618, 16.933         |  16.801, 20.108, 18.3176       |
 ------------------------------------------------------------------------------------------------------------------------
-| spring-boot-benchmark-data-rest-native             | 0.699, 3.022, 1.0291           |  0.704, 3.076, 1.0397          |
+| spring-boot-benchmark-data-rest-native             | 0.352, 0.475, 0.4075           |  0.364, 0.482, 0.4157          |
 ------------------------------------------------------------------------------------------------------------------------
-| spring-boot-benchmark-camel-activemq-plain         | 11.579, 14.904, 12.3029        |  12.698, 16.967, 13.4719       |
+| spring-boot-benchmark-activemq-plain               | 8.274, 10.819, 9.1886          |  9.27, 12.106, 10.2596         |
 ------------------------------------------------------------------------------------------------------------------------
-| spring-boot-benchmark-camel-activemq-aot           | 8.692, 14.182, 9.6287          |  9.689, 15.881, 10.7614        |
+| spring-boot-benchmark-activemq-aot                 | 7.005, 8.094, 7.4347           |  8.02, 9.362, 8.591            |
 ------------------------------------------------------------------------------------------------------------------------
-| spring-boot-benchmark-camel-activemq-cds           | 7.584, 13.107, 8.5939          |  8.196, 14.112, 9.2298         |
+| spring-boot-benchmark-activemq-cds                 | 5.386, 6.785, 6.0148           |  5.865, 7.4, 6.573             |
 ------------------------------------------------------------------------------------------------------------------------
-| spring-boot-benchmark-camel-activemq-aot-cds       | 5.288, 13.493, 6.765           |  5.89, 15.697, 7.5437          |
+| spring-boot-benchmark-activemq-aot-cds             | 3.926, 5.284, 4.5018           |  4.413, 5.893, 5.0644          |
 ------------------------------------------------------------------------------------------------------------------------
-| spring-boot-benchmark-camel-activemq-alpaquita     | 11.504, 12.1, 11.8284          |  12.619, 13.374, 13.0346       |
+| spring-boot-benchmark-activemq-alpaquita           | 8.302, 11.701, 9.4432          |  9.473, 13.073, 10.6688        |
 ------------------------------------------------------------------------------------------------------------------------
-| spring-boot-benchmark-camel-activemq-native        | 0.268, 0.452, 0.3256           |  0.273, 0.459, 0.331           |
+| spring-boot-benchmark-activemq-native              | 0.095, 0.203, 0.1581           |  0.1, 0.209, 0.1644            |
 ------------------------------------------------------------------------------------------------------------------------
-| spring-boot-benchmark-all-plain                    | 20.705, 22.89, 21.5767         |  22.016, 23.966, 22.7193       |
+| spring-boot-benchmark-all-plain                    | 14.189, 17.001, 15.7882        |  15.269, 18.099, 16.9182       |
 ------------------------------------------------------------------------------------------------------------------------
-| spring-boot-benchmark-all-aot                      | 17.999, 19.012, 18.4784        |  19.089, 20.103, 19.606        |
+| spring-boot-benchmark-all-aot                      | 12.803, 14.797, 13.7631        |  13.899, 15.879, 14.9007       |
 ------------------------------------------------------------------------------------------------------------------------
-| spring-boot-benchmark-all-cds                      | 13.1, 18.202, 14.6401          |  13.804, 19.004, 15.3491       |
+| spring-boot-benchmark-all-cds                      | 8.817, 10.602, 9.6784          |  9.41, 11.192, 10.3054         |
 ------------------------------------------------------------------------------------------------------------------------
-| spring-boot-benchmark-all-aot-cds                  | 10.898, 15.204, 12.0609        |  11.619, 15.985, 12.76         |
+| spring-boot-benchmark-all-aot-cds                  | 6.191, 7.71, 6.7228            |  6.712, 8.406, 7.3489          |
 ------------------------------------------------------------------------------------------------------------------------
-| spring-boot-benchmark-all-alpaquita                | 20.912, 22.608, 21.7008        |  22.293, 23.792, 22.9678       |
+| spring-boot-benchmark-all-alpaquita                | 13.995, 18.096, 15.5845        |  15.191, 19.706, 16.8526       |
 ------------------------------------------------------------------------------------------------------------------------
-| spring-boot-benchmark-all-native                   | 0.974, 1.556, 1.2084           |  0.979, 1.561, 1.2145          |
+| spring-boot-benchmark-all-native                   | 0.382, 0.619, 0.4645           |  0.391, 0.629, 0.4728          |
 ------------------------------------------------------------------------------------------------------------------------
 ```

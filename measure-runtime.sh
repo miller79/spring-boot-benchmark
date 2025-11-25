@@ -165,7 +165,7 @@ executeTest spring-boot-benchmark-original
 executeTest spring-boot-benchmark-tomcat
 executeTest spring-boot-benchmark-data-jpa
 executeTest spring-boot-benchmark-data-rest
-executeTest spring-boot-benchmark-camel-activemq
+executeTest spring-boot-benchmark-activemq
 executeTest spring-boot-benchmark-all
 
 showResults

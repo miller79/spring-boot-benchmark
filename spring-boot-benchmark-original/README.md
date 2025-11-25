@@ -1,3 +1,3 @@
 # Spring Boot Benchmark Original
 
-This application intends represents a barebones Spring Boot application.
+This application represents a barebones Spring Boot application.

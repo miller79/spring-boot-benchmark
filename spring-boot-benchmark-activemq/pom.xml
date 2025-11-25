@@ -10,11 +10,7 @@
         <relativePath>../spring-boot-benchmark-parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>spring-boot-benchmark-camel-activemq</artifactId>
-
-    <properties>
-        <camel.version>4.12.0</camel.version>
-    </properties>
+    <artifactId>spring-boot-benchmark-activemq</artifactId>
 
     <dependencies>
         <dependency>
@@ -29,10 +25,6 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-activemq</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.apache.camel.springboot</groupId>
-            <artifactId>camel-activemq6-starter</artifactId>
-        </dependency>
     </dependencies>
 
     <build>
@@ -43,16 +35,4 @@
             </plugin>
         </plugins>
     </build>
-
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.apache.camel.springboot</groupId>
-                <artifactId>camel-spring-boot-bom</artifactId>
-                <version>${camel.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
 </project>
