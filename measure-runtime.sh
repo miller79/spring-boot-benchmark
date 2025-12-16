@@ -125,6 +125,7 @@ executeTest () {
   buildAndRunTest $1 "aot"
   buildAndRunTest $1 "cds"
   buildAndRunTest $1 "aot-cds"
+  buildAndRunTest $1 "aot-caching"
   buildAndRunTest $1 "alpaquita"
   buildAndRunTest $1 "native"
 }
