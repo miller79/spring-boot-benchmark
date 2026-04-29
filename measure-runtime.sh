@@ -5,11 +5,21 @@
 # Feel free to change the script to play around with different options to your liking.
 #
 set -e
+set -o pipefail
 
 declare -A results
 declare -a resultsOrdered
 declare currentResult=0
-declare totalTests=10
+totalTests=${1:-10}
+if ! [[ "$totalTests" =~ ^[0-9]+$ ]] || [ "$totalTests" -eq 0 ]; then
+  echo "ERROR: Test count must be a positive integer, got: '$totalTests'" >&2
+  exit 1
+fi
+
+# Set up logging
+mkdir -p run-logs
+LOG_FILE="run-logs/benchmark-$(date +%Y-%m-%d-%H%M%S).log"
+DATE_COPY="run-logs/$(date +%Y-%m-%d).log"
 
 calculateStats() {
   local -a values=("$@")
@@ -71,6 +81,7 @@ abstractStartupTimes() {
 
 abstractProcessTimes () {
   local testRawResults=("$@")
+  local -a testProcessTimes
 
   for key in "${!testRawResults[@]}"
   do
@@ -101,17 +112,39 @@ buildAndRunTest () {
   $projectName/mvnw -f $projectName/pom.xml -P$projectType clean spring-boot:build-image -DimageName=$fullProjectName
   
   echo "Running $fullProjectName for logging purposes..."
-  docker run --rm --cpus=".6" -e="JAVA_TOOL_OPTIONS=-XX:ActiveProcessorCount=1" docker.io/library/$fullProjectName:LOCAL-SNAPSHOT
+  timeout 120 docker run --rm --cpus=".6" --memory=1g -e="JAVA_TOOL_OPTIONS=-XX:ActiveProcessorCount=1" docker.io/library/$fullProjectName:LOCAL-SNAPSHOT || echo "WARNING: Logging run for $fullProjectName failed or timed out"
 
   echo "Running $fullProjectName for benchmarking..."
   for (( i = 0; i < $totalTests; i++))
   do
-    testRawResults[$i]=$(docker run --rm --cpus=".6" -e="JAVA_TOOL_OPTIONS=-XX:ActiveProcessorCount=1" docker.io/library/$fullProjectName:LOCAL-SNAPSHOT 2>&1 | grep "Started Application in" | sed 's/^.*\(Started Application in.*\).*$/\1/')
-    echo ${testRawResults[$i]}
+    testRawResults[$i]=$(timeout 120 docker run --rm --cpus=".6" --memory=1g -e="JAVA_TOOL_OPTIONS=-XX:ActiveProcessorCount=1" docker.io/library/$fullProjectName:LOCAL-SNAPSHOT 2>&1 | grep "Started Application in" | sed 's/^.*\(Started Application in.*\).*$/\1/') || true
+    if [ -z "${testRawResults[$i]}" ]; then
+      echo "WARNING: Test run $i for $fullProjectName did not produce expected output"
+    fi
+    echo "${testRawResults[$i]}"
   done
   
-  testStartupTimes=$(abstractStartupTimes "${testRawResults[@]}")
-  testProcessTimes=$(abstractProcessTimes "${testRawResults[@]}")
+  # Filter out empty results from failed/timed-out runs
+  local -a validResults
+  for (( i = 0; i < ${#testRawResults[@]}; i++ ))
+  do
+    if [ -n "${testRawResults[$i]}" ]; then
+      validResults+=("${testRawResults[$i]}")
+    fi
+  done
+
+  if [ ${#validResults[@]} -eq 0 ]; then
+    echo "WARNING: All $totalTests runs failed for $fullProjectName — skipping stats calculation"
+    addResults "$fullProjectName" "N/A | N/A"
+    return
+  fi
+
+  if [ ${#validResults[@]} -lt ${#testRawResults[@]} ]; then
+    echo "WARNING: Only ${#validResults[@]} of ${#testRawResults[@]} runs produced results for $fullProjectName"
+  fi
+
+  testStartupTimes=$(abstractStartupTimes "${validResults[@]}")
+  testProcessTimes=$(abstractProcessTimes "${validResults[@]}")
   calculatedStartupTimes=$(calculateStats ${testStartupTimes[@]})
   calculatedProcessTimes=$(calculateStats ${testProcessTimes[@]})
 
@@ -121,6 +154,8 @@ buildAndRunTest () {
 executeTest () {
   local projectName="$1"
 
+  echo "=== Starting test module: $projectName at $(date '+%Y-%m-%d %H:%M:%S') ==="
+
   buildAndRunTest $1 "plain"
   buildAndRunTest $1 "aot"
   buildAndRunTest $1 "cds"
@@ -129,6 +164,8 @@ executeTest () {
   buildAndRunTest $1 "aot-aot-caching"
   buildAndRunTest $1 "alpaquita"
   buildAndRunTest $1 "native"
+
+  echo "=== Completed test module: $projectName at $(date '+%Y-%m-%d %H:%M:%S') ==="
 }
 
 printMultipleCharacters () {
@@ -163,11 +200,18 @@ showResults () {
   printMultipleCharacters "-" $length
 }
 
-executeTest spring-boot-benchmark-original
-executeTest spring-boot-benchmark-tomcat
-executeTest spring-boot-benchmark-data-jpa
-executeTest spring-boot-benchmark-data-rest
-executeTest spring-boot-benchmark-activemq
-executeTest spring-boot-benchmark-all
+run_benchmarks() {
+  executeTest spring-boot-benchmark-original
+  executeTest spring-boot-benchmark-tomcat
+  executeTest spring-boot-benchmark-data-jpa
+  executeTest spring-boot-benchmark-data-rest
+  executeTest spring-boot-benchmark-activemq
+  executeTest spring-boot-benchmark-all
 
-showResults
+  showResults
+}
+
+run_benchmarks 2>&1 | tee -a "$LOG_FILE"
+
+# Create a date-only copy of the log (symlinks don't work on Git Bash/Windows)
+cp "$LOG_FILE" "$DATE_COPY"
