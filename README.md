@@ -14,7 +14,7 @@
 
 ## Introduction
 
-This repository is a benchmark for Spring Boot 4.0.6 running on Java 25 in Docker.
+This repository is a benchmark for Spring Boot 4.1.1 running on Java 25 in Docker.
 It is meant to demonstrate the performance concerns with Spring Boot and, hopefully, lead to documentation that can focus on the desired solution.
 The end goal of this benchmark is to be the most optimally configured Spring Boot application in relationship to startup time.
 This repository can be used as a benchmark that others can use to demonstrate startup timing benchmarks.
