@@ -110,6 +110,19 @@ class ReportTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             report.series(self.dir)
 
+    def test_huge_integer_overflow_fails_closed(self):
+        raw = json.dumps(good()).replace('"started_s": 2.0,', '"started_s": 1' + "0" * 400 + ",", 1)
+        self.write(good(), raw=raw)
+        with self.assertRaises(ValueError):
+            report.series(self.dir)
+        self.assertEqual(report.load(self.dir, strict=False), [])
+
+    def test_series_requires_matching_file_for_module(self):
+        self.write(good("tomcat"))
+        with self.assertRaises(ValueError):
+            report.series(self.dir, module="original")
+        self.assertTrue(json.loads(report.series(self.dir, module="tomcat")))
+
     def test_non_numeric_bool_and_non_positive_metrics(self):
         for bad in ("fast", True, [1], {"a": 1}, -1, 0):
             self.rejected(self.mutated(lambda r, b=bad: r["samples"][0].update(started_s=b)))
@@ -131,9 +144,10 @@ class ReportTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             report.series(self.dir, module="tomcat")
 
-    def test_module_filter_without_file_is_empty(self):
+    def test_module_filter_without_file_fails_closed(self):
         self.write(good("tomcat"))
-        self.assertEqual(self.series(module="original"), [])
+        with self.assertRaises(ValueError):
+            self.series(module="original")
 
     def test_not_json_and_not_object(self):
         for raw in ("{nope", "[1,2]"):

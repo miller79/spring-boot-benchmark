@@ -101,7 +101,7 @@ def load(results_dir, strict=False, module=None):
             with open(path) as f:
                 res = json.load(f, parse_constant=_reject_constant)
             validate(res, path)
-        except (ValueError, OSError, RecursionError) as e:
+        except (ValueError, OSError, RecursionError, OverflowError) as e:
             if strict:
                 raise ValueError(f"{path}: {e}") from e
             print(f"WARNING: skipping {path}: {e}", file=sys.stderr)
@@ -198,7 +198,10 @@ def summary(results_dir):
 
 def series(results_dir, module=None):
     items = []
-    for res in load(results_dir, strict=True, module=module):
+    loaded = load(results_dir, strict=True, module=module)
+    if module and not loaded:
+        raise ValueError(f"no results-{module}.json found under {results_dir}")
+    for res in loaded:
         for cp in dict.fromkeys(s["cpu_profile"] for s in res["samples"]):
             for p in dict.fromkeys(v["profile"] for v in res["variants"]):
                 if p == "plain":
