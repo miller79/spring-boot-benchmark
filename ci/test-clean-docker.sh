@@ -33,10 +33,10 @@ LS='volume ls -q --filter name=pack-cache-'
 run "removes build and launch cache volumes, prunes the rest" 0 \
   "volume prune -f
 $LS
-volume rm pack-cache-1a2b3c.build
-volume rm pack-cache-1a2b3c.launch
+volume rm pack-cache-1a2b3c4d5e6f.build
+volume rm pack-cache-1a2b3c4d5e6f.launch
 image prune -f" \
-  "STUB_VOLUMES=$(printf 'pack-cache-1a2b3c.build\npack-cache-1a2b3c.launch')"
+  "STUB_VOLUMES=$(printf 'pack-cache-1a2b3c4d5e6f.build\npack-cache-1a2b3c4d5e6f.launch')"
 run "no cache volumes: nothing removed, never prune -a" 0 \
   "volume prune -f
 $LS
@@ -45,14 +45,14 @@ run "leaves other volumes alone" 0 \
   "volume prune -f
 $LS
 image prune -f" \
-  "STUB_VOLUMES=$(printf 'postgres-data\nmy-pack-cache-1a2b3c.build\npack-cache-evil;id.build\npack-layers-abc')"
+  "STUB_VOLUMES=$(printf 'postgres-data\nmy-pack-cache-1a2b3c4d5e6f.build\npack-cache-evil;id.build\npack-layers-abc')"
 run "a volume that cannot be removed only warns" 0 \
   "volume prune -f
 $LS
-volume rm pack-cache-aaaaaa.build
-volume rm pack-cache-bbbbbb.build
+volume rm pack-cache-aaaaaaaaaaaa.build
+volume rm pack-cache-bbbbbbbbbbbb.build
 image prune -f" \
-  "STUB_VOLUMES=$(printf 'pack-cache-aaaaaa.build\npack-cache-bbbbbb.build')" STUB_RM_FAIL=pack-cache-aaaaaa.build
+  "STUB_VOLUMES=$(printf 'pack-cache-aaaaaaaaaaaa.build\npack-cache-bbbbbbbbbbbb.build')" STUB_RM_FAIL=pack-cache-aaaaaaaaaaaa.build
 
 echo
 if [[ $fails -eq 0 ]]; then echo "all clean-docker scenarios passed"; else echo "$fails scenario(s) failed"; exit 1; fi
