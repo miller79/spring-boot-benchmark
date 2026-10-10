@@ -6,3 +6,5 @@
 /target/
 /spring-boot-benchmark-parent/.settings
 spring-boot-benchmark-parent/.project
+__pycache__/
+*.pyc
