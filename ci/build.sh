@@ -27,8 +27,7 @@ for profile in "${LIST[@]}"; do
     clean spring-boot:build-image "-DimageName=$name"
   echo "built $name in $(( $(date +%s) - start ))s"
   echo "::endgroup::"
-  # Buildpack cache volumes and dangling layers are not needed after the image exists.
-  docker volume prune -f > /dev/null
-  docker image prune -f > /dev/null
+  # Buildpack cache volumes (named, so `docker volume prune` misses them) and dangling layers are not needed after the image exists.
+  "$(dirname "${BASH_SOURCE[0]}")/clean-docker.sh"
   { echo "== after $SIDE $MODULE $profile ($(date -u +%H:%M:%S)), build $(( $(date +%s) - start ))s"; df -h / | tail -1; docker system df; } | tee -a "$OUT/disk.log"
 done
