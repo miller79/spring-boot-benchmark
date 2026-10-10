@@ -42,8 +42,11 @@ on:
 permissions:
   contents: read
 
-# PR runs are cancelled when superseded. Pushes to main and manual runs queue instead, so a
-# superseded push never silently drops a history point for a module the next push did not touch.
+# PR runs are cancelled when superseded. Pushes to main and manual runs queue instead, but GitHub
+# keeps only one pending run per group, so a third push still cancels the pending second one. That
+# cannot lose a module: on push, `plan` diffs against the head of the last *successful* push run
+# (LAST_OK_SHA) rather than the previous commit, and falls back to every module when it is unknown.
+# This group also serialises the publish jobs of successive runs (they push to `bench-data`).
 concurrency:
   group: benchmark-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -60,6 +63,7 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: read
+      actions: read
     outputs:
       modules: ${{ steps.plan.outputs.modules }}
       mode: ${{ steps.plan.outputs.mode }}
@@ -72,12 +76,23 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+      - name: Find the last successful push run (diff base for pushes)
+        id: last
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          sha=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow benchmark.yml --branch "$BRANCH" \
+            --event push --status success --limit 1 --json headSha --jq '.[0].headSha // ""' || true)
+          echo "last_ok_sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "last successful push run: ${sha:-none}"
       - id: plan
         run: ./ci/plan.sh
         env:
+          LAST_OK_SHA: ${{ steps.last.outputs.last_ok_sha }}
           EVENT_NAME: ${{ github.event_name }}
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          BEFORE_SHA: ${{ github.event.before }}
           INPUT_MODULES: ${{ inputs.modules }}
           INPUT_PROFILES: ${{ inputs.profiles }}
           INPUT_CPU_PROFILES: ${{ inputs.cpu_profiles }}
@@ -125,16 +140,30 @@ jobs:
         run: ./ci/prepare-host.sh "$CPUSET" results
       - name: Build head images
         run: ./ci/build.sh "$MODULE" "$GITHUB_WORKSPACE" head "$PROFILES" results
-      - name: Build base images
+      - name: Detect whether the module exists on the PR base
+        id: base
         if: needs.plan.outputs.mode == 'smoke'
+        run: |
+          if [[ -d "base/spring-boot-benchmark-$MODULE" ]]; then
+            echo "has_base=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_base=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::$MODULE is new in this PR; benchmarking head only (no base to compare)"
+          fi
+      - name: Build base images
+        if: needs.plan.outputs.mode == 'smoke' && steps.base.outputs.has_base == 'true'
         run: ./ci/build.sh "$MODULE" "$GITHUB_WORKSPACE/base" base "$PROFILES" results
       - name: Benchmark (interleaved cold starts, cores pinned, cpu.stat, memory.peak)
+        env:
+          HAS_BASE: ${{ steps.base.outputs.has_base }}
         run: |
           sides=head
-          [[ "$MODE" == "smoke" ]] && sides=head,base
+          if [[ "$MODE" == "smoke" && "$HAS_BASE" == "true" ]]; then sides=head,base; fi
           python3 ci/bench.py run --module "$MODULE" --profiles "$PROFILES" --sides "$sides" \
             --cpu-profiles "$CPU_PROFILES" --iterations "$ITERATIONS" --repeats "$REPEATS" \
             --cpuset "$CPUSET" --out results
+      - name: Mark module complete (publish only uses modules with this marker)
+        run: echo ok > results/bench-ok
       - name: Summary
         if: always()
         run: |
@@ -149,33 +178,65 @@ jobs:
           path: results/
           retention-days: 30
 
+  # One job per module that was benchmarked, run one at a time. A module whose bench job failed has
+  # no `bench-ok` marker and is reported and skipped; the others are still published. Each module is
+  # its own series group (`name:`), so github-action-benchmark compares a module with that module's
+  # previous published run, and its alerts name the module.
   publish:
     needs: [plan, bench]
     # Only trusted code on the default branch may write history or open issues.
     if: >-
+      !cancelled() &&
       github.event_name == 'push' &&
       github.ref == format('refs/heads/{0}', github.event.repository.default_branch) &&
       needs.plan.outputs.mode == 'full' &&
-      needs.bench.result == 'success'
+      needs.bench.result != 'skipped'
+    name: publish (${{ matrix.module }})
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     permissions:
       contents: write
       issues: write
-    concurrency:
-      group: bench-data
-      cancel-in-progress: false
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        module: ${{ fromJSON(needs.plan.outputs.modules) }}
+    env:
+      MODULE: ${{ matrix.module }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      - name: Download this module's results
+        id: download
+        continue-on-error: true
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          pattern: results-*
+          name: results-${{ matrix.module }}
           path: results
-      - name: Build ratio series
-        run: python3 ci/report.py series results > ratios.json
+      - name: Check that the module benchmarked successfully
+        id: gate
+        run: |
+          if [[ -f results/bench-ok ]]; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::$MODULE was not published: its bench job failed or produced no results"
+            echo "### Not published: $MODULE (bench job failed or produced no results)" >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Build ratio series (validated; fails on malformed results)
+        id: series
+        if: steps.gate.outputs.ok == 'true'
+        run: |
+          python3 ci/report.py series results --module "$MODULE" > ratios.json
+          if [[ "$(jq length ratios.json)" -gt 0 ]]; then
+            echo "has_series=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::$MODULE produced no ratio series (too few successful runs)"
+          fi
       - name: Ensure bench-data branch exists
+        if: steps.series.outputs.has_series == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -190,10 +251,11 @@ jobs:
           gh api -X POST "repos/$GITHUB_REPOSITORY/git/refs" -f ref=refs/heads/bench-data -f sha="$commit" --silent
       - name: Publish history and check for regressions
         id: bench
+        if: steps.series.outputs.has_series == 'true'
         continue-on-error: true
         uses: benchmark-action/github-action-benchmark@4322e5726e6334590d251fc4f92bec0efafc45dc # v1.22.2
         with:
-          name: spring-boot-benchmark
+          name: spring-boot-benchmark-${{ matrix.module }}
           tool: customSmallerIsBetter
           output-file-path: ratios.json
           gh-pages-branch: bench-data
@@ -203,12 +265,18 @@ jobs:
           alert-threshold: '120%'
           comment-on-alert: true
           fail-on-alert: true
-      - name: Open an alert issue
+      - name: Open or update the alert issue for this module
         if: steps.bench.outcome == 'failure'
         env:
           GH_TOKEN: ${{ github.token }}
+          TITLE: 'Benchmark alert: ${{ matrix.module }}'
         run: |
           run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
-          gh issue create --repo "$GITHUB_REPOSITORY" \
-            --title "Benchmark alert for ${GITHUB_SHA::7}" \
-            --body "The benchmark publish step failed for commit $GITHUB_SHA. This is normally a ratio-to-plain regression above the 120% threshold; it can also be a publish error. See $run_url (job summary and the commit comment)."
+          body="The benchmark publish step failed for $MODULE at commit $GITHUB_SHA. This is normally a ratio-to-plain regression above the 120% threshold; it can also be a publish error. See $run_url (job summary and the commit comment)."
+          existing=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "\"$TITLE\" in:title" \
+            --json number,title --jq '[.[] | select(.title == env.TITLE)][0].number // empty' || true)
+          if [[ -n "$existing" ]]; then
+            gh issue comment "$existing" --repo "$GITHUB_REPOSITORY" --body "$body"
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$TITLE" --body "$body"
+          fi
