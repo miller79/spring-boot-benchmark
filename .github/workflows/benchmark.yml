@@ -1,0 +1,214 @@
+name: benchmark
+
+# Relative startup benchmark on GitHub-hosted runners. Ratios to `plain` inside one job are
+# the only numbers to trust; see the "Continuous benchmarking" section of the README.
+# No schedule on purpose: it runs only when benchmarked code changes (or by hand).
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'spring-boot-benchmark-*/src/**'
+      - 'spring-boot-benchmark-*/pom.xml'
+      - 'spring-boot-benchmark-*/.mvn/**'
+      - 'ci/**'
+      - '.github/workflows/benchmark.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'spring-boot-benchmark-*/src/**'
+      - 'spring-boot-benchmark-*/pom.xml'
+      - 'spring-boot-benchmark-*/.mvn/**'
+      - 'ci/**'
+      - '.github/workflows/benchmark.yml'
+  workflow_dispatch:
+    inputs:
+      modules:
+        description: 'Comma list of modules (original,tomcat,data-jpa,data-rest,activemq,all) or all-modules'
+        default: 'all-modules'
+      profiles:
+        description: 'Comma list of build profiles'
+        default: 'plain,aot,cds,aot-cds,aot-caching,aot-aot-caching,alpaquita,native'
+      cpu_profiles:
+        description: 'p06 = 0.6 CPU (as measure-runtime.sh), p10 = 1.0, p20 = 2.0'
+        default: 'p06,p10,p20'
+      iterations:
+        description: 'Cold starts per variant and CPU profile'
+        default: '30'
+      spike:
+        description: 'Spike: module original, 3 repeats, plain/aot-cds/native; records disk, cgroup and noise. Overrides the other inputs'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+# PR runs are cancelled when superseded. Pushes to main and manual runs queue instead, so a
+# superseded push never silently drops a history point for a module the next push did not touch.
+concurrency:
+  group: benchmark-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  plan:
+    # Never run PR code from forks on this workflow: same-repo branches only (includes Dependabot).
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    outputs:
+      modules: ${{ steps.plan.outputs.modules }}
+      mode: ${{ steps.plan.outputs.mode }}
+      profiles: ${{ steps.plan.outputs.profiles }}
+      cpu_profiles: ${{ steps.plan.outputs.cpu_profiles }}
+      iterations: ${{ steps.plan.outputs.iterations }}
+      repeats: ${{ steps.plan.outputs.repeats }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - id: plan
+        run: ./ci/plan.sh
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          BEFORE_SHA: ${{ github.event.before }}
+          INPUT_MODULES: ${{ inputs.modules }}
+          INPUT_PROFILES: ${{ inputs.profiles }}
+          INPUT_CPU_PROFILES: ${{ inputs.cpu_profiles }}
+          INPUT_ITERATIONS: ${{ inputs.iterations }}
+          INPUT_SPIKE: ${{ inputs.spike }}
+
+  bench:
+    needs: plan
+    if: needs.plan.outputs.modules != '[]'
+    name: bench (${{ matrix.module }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: ${{ needs.plan.outputs.mode == 'smoke' && 120 || 340 }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        module: ${{ fromJSON(needs.plan.outputs.modules) }}
+    env:
+      MODULE: ${{ matrix.module }}
+      MODE: ${{ needs.plan.outputs.mode }}
+      PROFILES: ${{ needs.plan.outputs.profiles }}
+      CPU_PROFILES: ${{ needs.plan.outputs.cpu_profiles }}
+      ITERATIONS: ${{ needs.plan.outputs.iterations }}
+      REPEATS: ${{ needs.plan.outputs.repeats }}
+      CPUSET: '2,3'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Checkout PR base for the head-vs-base comparison
+        if: needs.plan.outputs.mode == 'smoke'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: base
+          persist-credentials: false
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+      - name: Prepare host (cgroup v2 check, disk, cpuset probe, env.json)
+        run: ./ci/prepare-host.sh "$CPUSET" results
+      - name: Build head images
+        run: ./ci/build.sh "$MODULE" "$GITHUB_WORKSPACE" head "$PROFILES" results
+      - name: Build base images
+        if: needs.plan.outputs.mode == 'smoke'
+        run: ./ci/build.sh "$MODULE" "$GITHUB_WORKSPACE/base" base "$PROFILES" results
+      - name: Benchmark (interleaved cold starts, cores pinned, cpu.stat, memory.peak)
+        run: |
+          sides=head
+          [[ "$MODE" == "smoke" ]] && sides=head,base
+          python3 ci/bench.py run --module "$MODULE" --profiles "$PROFILES" --sides "$sides" \
+            --cpu-profiles "$CPU_PROFILES" --iterations "$ITERATIONS" --repeats "$REPEATS" \
+            --cpuset "$CPUSET" --out results
+      - name: Summary
+        if: always()
+        run: |
+          python3 ci/report.py summary results >> "$GITHUB_STEP_SUMMARY"
+          if [[ "$MODE" == "spike" ]]; then
+            { echo '## Spike: host facts'; echo '```'; cat results/env.json results/cgroup-probe.log results/disk.log || true; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: results-${{ matrix.module }}
+          path: results/
+          retention-days: 30
+
+  publish:
+    needs: [plan, bench]
+    # Only trusted code on the default branch may write history or open issues.
+    if: >-
+      github.event_name == 'push' &&
+      github.ref == format('refs/heads/{0}', github.event.repository.default_branch) &&
+      needs.plan.outputs.mode == 'full' &&
+      needs.bench.result == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      issues: write
+    concurrency:
+      group: bench-data
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: results-*
+          path: results
+      - name: Build ratio series
+        run: python3 ci/report.py series results > ratios.json
+      - name: Ensure bench-data branch exists
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/bench-data" --silent 2>/dev/null; then
+            exit 0
+          fi
+          blob=$(gh api -X POST "repos/$GITHUB_REPOSITORY/git/blobs" -f encoding=utf-8 \
+            -f content='Benchmark history written by the benchmark workflow. Do not edit.' -q .sha)
+          tree=$(printf '{"tree":[{"path":"README.md","mode":"100644","type":"blob","sha":"%s"}]}' "$blob" \
+            | gh api -X POST "repos/$GITHUB_REPOSITORY/git/trees" --input - -q .sha)
+          commit=$(gh api -X POST "repos/$GITHUB_REPOSITORY/git/commits" -f message='Initialise bench-data' -f tree="$tree" -q .sha)
+          gh api -X POST "repos/$GITHUB_REPOSITORY/git/refs" -f ref=refs/heads/bench-data -f sha="$commit" --silent
+      - name: Publish history and check for regressions
+        id: bench
+        continue-on-error: true
+        uses: benchmark-action/github-action-benchmark@4322e5726e6334590d251fc4f92bec0efafc45dc # v1.22.2
+        with:
+          name: spring-boot-benchmark
+          tool: customSmallerIsBetter
+          output-file-path: ratios.json
+          gh-pages-branch: bench-data
+          github-token: ${{ github.token }}
+          auto-push: true
+          summary-always: true
+          alert-threshold: '120%'
+          comment-on-alert: true
+          fail-on-alert: true
+      - name: Open an alert issue
+        if: steps.bench.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          gh issue create --repo "$GITHUB_REPOSITORY" \
+            --title "Benchmark alert for ${GITHUB_SHA::7}" \
+            --body "The benchmark publish step failed for commit $GITHUB_SHA. This is normally a ratio-to-plain regression above the 120% threshold; it can also be a publish error. See $run_url (job summary and the commit comment)."
