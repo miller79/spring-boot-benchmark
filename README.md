@@ -105,6 +105,18 @@ export BENCH_MAVEN_SETTINGS=$HOME/mirror-settings.xml   # optional, passed to Ma
 
 ## Continuous benchmarking (GitHub Actions)
 
+**Where to see the results**
+
+| Where | What you see | When available |
+|---|---|---|
+| [Actions](https://github.com/miller79/spring-boot-benchmark/actions) > workflow **benchmark** > a run > **Summary** (the `bench (<module>)` jobs) | Tables per module and CPU profile: started/wall medians, p95 and ratio to `plain` with 95% intervals, throttling, peak memory. | Every run that benchmarked a module. Works today. |
+| Same run > **Artifacts** > `results-<module>` | The raw results files of that module (kept 30 days). | Same as above. |
+| Branch [`bench-data`](https://github.com/miller79/spring-boot-benchmark/tree/bench-data), file `data.js` (the dashboard's `index.html` is next to it) | The published history: ratio to `plain` per module, plus absolute median ms in the `-absolute` series (best effort). | After the first full run on `main` has published. Not there yet (**Unverified** until seen). |
+| Dashboard https://miller79.github.io/spring-boot-benchmark/ | Charts of that history. See [Benchmark dashboard](#benchmark-dashboard). | After the one-time Pages setup below and a `main` run. **Unverified**: not seen live. |
+| [Issues](https://github.com/miller79/spring-boot-benchmark/issues), title `Benchmark alert: <module>` | A ratio worse than 120% of that module's previous published run (one issue per module, updated on repeat). The action also comments on the commit. | After a regression on a full `main` run. |
+
+Smoke versus full: a `pull_request` run is a **smoke** benchmark (`plain` and `aot-cds`, 0.6 CPU, 10 starts, one repeat, head vs base). It shows up only in the job summary and artifacts and is never published. A **full** run (all 8 profiles, 3 CPU profiles, 30 starts) happens on a push to `main`, and only those runs reach `bench-data`, the dashboard and the alerts. A manual `workflow_dispatch` run uses the grid you choose and never publishes. If a module cannot be published, its `publish (<module>)` job turns the run red.
+
 The `benchmark` workflow (`.github/workflows/benchmark.yml`, drivers in `ci/`) runs the startup benchmark on GitHub-hosted `ubuntu-24.04` runners. There is no schedule: it runs only when benchmarked code changes, or manually.
 
 | Trigger | What runs |
