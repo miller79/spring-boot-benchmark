@@ -93,17 +93,19 @@ The `benchmark` workflow (`.github/workflows/benchmark.yml`, drivers in `ci/`) r
 
 | Trigger | What runs |
 |---|---|
-| `pull_request` (same-repo branches only, never forks) | Only modules whose `src/`, `pom.xml` or `.mvn/` changed (or all, if `spring-boot-benchmark-parent`, `ci/` or the workflow changed). Smoke: `plain` and `aot-cds`, 0.6 CPU, 10 starts, **head vs PR base**. Results appear in the job summary; nothing is commented or published. |
-| `push` to `main` (same path filters) | Full grid for the changed modules: 8 profiles x 0.6/1.0/2.0 CPU x 30 starts. Ratios are appended to the `bench-data` branch; a regression alert opens an issue. |
-| `workflow_dispatch` | Choose modules, profiles, CPU profiles and iterations. Never publishes. Tick `spike` to record disk headroom, cgroup/cpuset behaviour and run-to-run noise (3 repeats). |
+| `pull_request` (same-repo branches only, never forks) | Only modules whose `src/`, `pom.xml` or `.mvn/` changed (or all, if `spring-boot-benchmark-parent`, `ci/` or the workflow changed). Smoke: `plain` and `aot-cds`, 0.6 CPU, 10 starts, **merge result (`refs/pull/N/merge`) vs the PR base**; a module that is new in the PR runs head only. Results appear in the job summary; nothing is commented or published. With 10 starts the p95 column is only indicative. |
+| `push` to `main` (same path filters) | Full grid for every module changed since the **last successful push run** (not just since the previous commit): 8 profiles x 0.6/1.0/2.0 CPU x 30 starts. If that run is unknown, every module runs. Ratios of each module that benchmarked successfully are appended to the `bench-data` branch; a regression alert opens (or updates) one issue per module. |
+| `workflow_dispatch` | Choose modules, profiles, CPU profiles and iterations (profiles and CPU profiles must be known names, iterations 1-999, duplicates are removed). Never publishes. Tick `spike` to record disk headroom, cgroup/cpuset behaviour and run-to-run noise (3 repeats). |
 
 How to read the results:
 
 - Each module builds and benchmarks in its own job (one VM). Variants run interleaved in random order, pinned to cores 2-3 with `--cpus`/`--memory`. `p06` reproduces `measure-runtime.sh`.
 - **Trust ratios to `plain` inside one job. Do not trust absolute times**, compare numbers across runs, or compare with the table below (a different machine). Shared VMs are noisy; summaries show 95% bootstrap intervals.
-- The apps close themselves after startup, so "wall" is container start to exit, and "started" is Spring's own `Started Application in` line. `cpu.stat` throttling and `memory.peak` are sampled while the container runs (a lower bound).
-- History lives on the `bench-data` branch (created automatically); alerts trigger when a ratio worsens by more than 20% against the previous run. This threshold is a starting value until the spike measures real noise.
-- Benchmark jobs are not meant to be required checks, so a noisy or failed run only warns (this includes Dependabot PRs). `github-actions` updates keep the pinned action SHAs current.
+- The apps close themselves after startup, so "wall" is container start to exit, and "started" is Spring's own `Started Application in` line. "wall" includes the `docker start` latency (roughly constant), which pulls wall ratios of very fast variants such as `native` towards 1; prefer "started" for those. `cpu.stat` throttling and `memory.peak` are sampled while the container runs (a lower bound).
+- History lives on the `bench-data` branch (created automatically). Each module is its own series group (`spring-boot-benchmark-<module>`): a regression alert fires when a ratio worsens by more than 20% against **that module's previous published run, and only for series present in it**. There is no confidence-interval test, only the threshold, which is a starting value until the spike measures real noise.
+- Only ratios to `plain` are published, so a regression of `plain` itself (all other ratios improve) is **not detected**.
+- Pushes that are queued behind a running benchmark can be cancelled by newer ones; no module is lost, because the next successful run covers everything changed since the last successful one. A failed module is not published (it is reported in the publish job summary), and because the run is then red, it is retried by the next push to `main`.
+- Benchmark jobs are not meant to be required checks. A failed or noisy run still shows a red check on the PR, but does not block merging unless someone makes it required (this includes Dependabot PRs). `github-actions` updates keep the pinned action SHAs current.
 
 ## Results
 
