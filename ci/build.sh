@@ -18,7 +18,8 @@ for profile in "${LIST[@]}"; do
   name="spring-boot-benchmark-$MODULE-$profile$SUFFIX"
   echo "::group::build $SIDE $MODULE $profile"
   start=$(date +%s)
-  "$ROOT/spring-boot-benchmark-$MODULE/mvnw" -B -ntp -DskipTests \
+  # Run through bash: the wrappers are committed as mode 100644, so executing them directly fails (rc=126).
+  bash "$ROOT/spring-boot-benchmark-$MODULE/mvnw" -B -ntp -DskipTests \
     -f "$ROOT/spring-boot-benchmark-$MODULE/pom.xml" "-P$profile" \
     clean spring-boot:build-image "-DimageName=$name"
   echo "built $name in $(( $(date +%s) - start ))s"
