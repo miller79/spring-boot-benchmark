@@ -198,8 +198,23 @@ jobs:
   # its own series group (`name:`), so github-action-benchmark compares a module with that module's
   # previous published run, and its alerts name the module. Absolute times go to a second group
   # (`<name>-absolute`) on the same dashboard; only the ratio group alerts. The dashboard is the
-  # action's index.html at the root of `bench-data`, deployed by the `deploy-pages` job (Pages source
-  # must be "GitHub Actions": pushes made with GITHUB_TOKEN do not trigger a branch-based Pages build).
+  # action's index.html at the root of `bench-data`, deployed by the separate `pages` workflow after
+  # this one (a Pages failure must not turn this run red; see pages.yml).
+  #
+  # Alert versus error. The action (v1.22.2) has no outputs and fails the step the same way for a
+  # regression alert (raised after it pushed) and for a publish error (nothing pushed), so the step
+  # outcome alone cannot tell them apart. The `landed` step asks the data instead: the run is red
+  # unless `bench-data` moved and its data.js holds this commit's entry for this module.
+  #   - publish error (data not on bench-data): `landed` fails, the leg and the run go red, LAST_OK_SHA
+  #     stays put and the next push retries the module.
+  #   - regression alert (data published): the alert issue is opened or updated and the leg goes green.
+  #     A regression does NOT hold LAST_OK_SHA back: LAST_OK_SHA means "ingested", not "fast enough".
+  #     The data point is already published, and a later push compares against that already-regressed
+  #     point and stays silent, so holding LAST_OK_SHA back would re-benchmark commits for nothing.
+  #     The issue is the alert. If opening it fails (3 tries), the leg is red, so the failure is
+  #     visible; recover by re-running that run's failed jobs. That re-run alerts again (the action
+  #     ignores same-commit entries when it picks the baseline) and adds a duplicate data point. A
+  #     later push does not re-alert.
   publish:
     needs: [plan, bench]
     # Only trusted code on the default branch may write history or open issues.
@@ -248,12 +263,9 @@ jobs:
         id: series
         if: steps.gate.outputs.ok == 'true'
         run: |
-          python3 ci/report.py series results --module "$MODULE" > ratios.json
-          if [[ "$(jq length ratios.json)" -gt 0 ]]; then
-            echo "has_series=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "::warning::$MODULE produced no ratio series (too few successful runs)"
-          fi
+          # A module that passed the bench checkpoint must yield ratios: an empty series is an error.
+          python3 ci/report.py series results --module "$MODULE" --require-nonempty > ratios.json
+          echo "has_series=true" >> "$GITHUB_OUTPUT"
       # Separate step so a failure here can never block the ratio publish (the alerting series).
       - name: Build absolute series (best effort)
         id: absolute
@@ -280,6 +292,14 @@ jobs:
             | gh api -X POST "repos/$GITHUB_REPOSITORY/git/trees" --input - -q .sha)
           commit=$(gh api -X POST "repos/$GITHUB_REPOSITORY/git/commits" -f message='Initialise bench-data' -f tree="$tree" -q .sha)
           gh api -X POST "repos/$GITHUB_REPOSITORY/git/refs" -f ref=refs/heads/bench-data -f sha="$commit" --silent
+      - name: Record the bench-data head before publishing
+        id: before
+        if: steps.series.outputs.has_series == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sha=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/bench-data" -q .object.sha)
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
       - name: Publish history and check for regressions
         id: bench
         if: steps.series.outputs.has_series == 'true'
@@ -297,6 +317,18 @@ jobs:
           alert-threshold: '120%'
           comment-on-alert: true
           fail-on-alert: true
+      # The action cannot say whether it failed on an alert or on a push (see the comment above the
+      # job), so check that this run's data is on bench-data. Fails the leg when it is not.
+      - name: Verify the history push landed (publish error versus alert)
+        id: landed
+        if: steps.series.outputs.has_series == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BENCH_NAME: spring-boot-benchmark-${{ matrix.module }}
+          BEFORE_SHA: ${{ steps.before.outputs.sha }}
+          BENCH_OUTCOME: ${{ steps.bench.outcome }}
+          DATA_FILE: data.js
+        run: bash ci/landed.sh
       # Absolute medians in ms as their own series group, for visitors. No alert, comment or failure
       # inputs: shared-runner absolutes are noisy and must never gate. A failed publish only warns.
       - name: Publish absolute times (no alerting)
@@ -322,59 +354,20 @@ jobs:
           TITLE: 'Benchmark alert: ${{ matrix.module }}'
         run: |
           run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
-          body="The benchmark publish step failed for $MODULE at commit $GITHUB_SHA. This is normally a ratio-to-plain regression above the 120% threshold; it can also be a publish error. See $run_url (job summary and the commit comment)."
-          existing=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "\"$TITLE\" in:title" \
-            --json number,title --jq '[.[] | select(.title == env.TITLE)][0].number // empty' || true)
-          if [[ -n "$existing" ]]; then
-            gh issue comment "$existing" --repo "$GITHUB_REPOSITORY" --body "$body"
-          else
-            gh issue create --repo "$GITHUB_REPOSITORY" --title "$TITLE" --body "$body"
-          fi
-
-  # Pages does not rebuild on GITHUB_TOKEN pushes, so deploy bench-data explicitly. The extra token
-  # scopes (pages: write, id-token: write) exist only on this job; it runs only after `publish`
-  # on a default-branch push in full mode (same condition), and never on PR or dispatch runs.
-  deploy-pages:
-    needs: [plan, publish]
-    if: >-
-      !cancelled() &&
-      needs.publish.result != 'skipped' &&
-      github.event_name == 'push' &&
-      github.ref == format('refs/heads/{0}', github.event.repository.default_branch) &&
-      needs.plan.outputs.mode == 'full'
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-    concurrency:
-      group: benchmark-pages
-      cancel-in-progress: false
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Check that bench-data has a dashboard
-        id: probe
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          if gh api "repos/$GITHUB_REPOSITORY/contents/index.html?ref=bench-data" --silent 2>/dev/null; then
-            echo "present=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "::notice::bench-data or its index.html is missing or empty; skipping the Pages deploy"
-          fi
-      - if: steps.probe.outputs.present == 'true'
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: bench-data
-          path: site
-          persist-credentials: false
-      - if: steps.probe.outputs.present == 'true'
-        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
-        with:
-          path: site
-      - id: deployment
-        if: steps.probe.outputs.present == 'true'
-        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+          body="The benchmark action reported a failure for $MODULE at commit $GITHUB_SHA after the history was published to bench-data. This is normally a ratio-to-plain regression above the 120% threshold. See $run_url (job summary and the commit comment)."
+          alert() {
+            existing=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "\"$TITLE\" in:title" \
+              --json number,title --jq '[.[] | select(.title == env.TITLE)][0].number // empty' || true)
+            if [[ -n "$existing" ]]; then
+              gh issue comment "$existing" --repo "$GITHUB_REPOSITORY" --body "$body"
+            else
+              gh issue create --repo "$GITHUB_REPOSITORY" --title "$TITLE" --body "$body"
+            fi
+          }
+          for attempt in 1 2 3; do
+            alert && exit 0
+            echo "::warning::alert issue attempt $attempt failed"
+            if [[ $attempt -lt 3 ]]; then sleep $((attempt * 5)); fi
+          done
+          echo "::error::could not open or update the alert issue for $MODULE"
+          exit 1

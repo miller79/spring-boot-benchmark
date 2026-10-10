@@ -2,9 +2,10 @@
 """Summaries and trend series from bench.py results (stdlib only).
 
   report.py summary <results-dir>   markdown for $GITHUB_STEP_SUMMARY
-  report.py series  <results-dir> [--module M] [--kind ratio|absolute]
+  report.py series  <results-dir> [--module M] [--kind ratio|absolute] [--require-nonempty]
                                     customSmallerIsBetter JSON for github-action-benchmark;
-                                    fails (exit 1) on any malformed or non-allowlisted result
+                                    fails (exit 1) on any malformed or non-allowlisted result,
+                                    and, with --require-nonempty, when the series would be empty
 
 Two kinds of series, published as separate groups (the workflow gates only the ratio group):
   ratio     variant / `plain` of the same module, measured inside one job. The trusted numbers.
@@ -19,7 +20,7 @@ import random
 import statistics
 import sys
 
-from bench import CPU_PROFILES, MODULES, PROFILES
+from bench import CPU_PROFILES, MIN_OK_SAMPLES, MODULES, PROFILES, insufficient_cells
 
 BOOTSTRAPS = 2000
 MAX_FILE_BYTES = 20 * 1024 * 1024
@@ -198,7 +199,7 @@ def summary(results_dir):
     return "\n".join(out) if out else "No benchmark results found.\n"
 
 
-def series(results_dir, module=None, kind="ratio"):
+def series(results_dir, module=None, kind="ratio", require_nonempty=False):
     if kind not in ("ratio", "absolute"):
         raise ValueError(f"unknown series kind: {kind!r}")
     items = []
@@ -206,12 +207,18 @@ def series(results_dir, module=None, kind="ratio"):
     if module and not loaded:
         raise ValueError(f"no results-{module}.json found under {results_dir}")
     for res in loaded:
+        if require_nonempty:  # strict (publish) mode: the expected grid comes from the producer, not from the surviving samples
+            if not res.get("cpu_profiles"):
+                raise ValueError(f"{res['module']}: no cpu_profiles recorded, cannot check completeness")
+            bad = insufficient_cells(res, res["cpu_profiles"], need=MIN_OK_SAMPLES)
+            if bad:
+                raise ValueError(f"{res['module']}: cells below {MIN_OK_SAMPLES} ok samples: " + "; ".join(bad))
         for cp in dict.fromkeys(s["cpu_profile"] for s in res["samples"]):
             for p in dict.fromkeys(v["profile"] for v in res["variants"]):
                 if kind == "absolute":
                     for metric, label in METRICS:
                         vals = values(res["samples"], metric, cpu_profile=cp, side="head", profile=p)
-                        if len(vals) < 5:
+                        if len(vals) < MIN_OK_SAMPLES:
                             continue
                         med = statistics.median(vals) * 1000
                         if not math.isfinite(med) or med <= 0:
@@ -228,7 +235,7 @@ def series(results_dir, module=None, kind="ratio"):
                 for metric, label in METRICS:
                     num = values(res["samples"], metric, cpu_profile=cp, side="head", profile=p)
                     den = values(res["samples"], metric, cpu_profile=cp, side="head", profile="plain")
-                    if len(num) < 5 or len(den) < 5:
+                    if len(num) < MIN_OK_SAMPLES or len(den) < MIN_OK_SAMPLES:
                         continue
                     point, lo, hi = ratio_ci(num, den)
                     if not all(math.isfinite(x) for x in (point, lo, hi)) or not 0 < point < MAX_RATIO:
@@ -240,6 +247,8 @@ def series(results_dir, module=None, kind="ratio"):
                         "range": f"[{lo:.3f}, {hi:.3f}]",
                         "extra": f"n={len(num)} vs plain n={len(den)}",
                     })
+    if require_nonempty and not items:
+        raise ValueError(f"empty {kind} series: no cell has {MIN_OK_SAMPLES}+ ok samples")
     return json.dumps(items, indent=1)
 
 
@@ -253,11 +262,14 @@ if __name__ == "__main__":
                 sys.exit(__doc__)
             print(summary(args[1]))
         else:
-            opts, rest = {}, args[2:]
+            opts, rest, require = {}, args[2:], False
             while rest:
+                if rest[0] == "--require-nonempty" and not require:
+                    require, rest = True, rest[1:]
+                    continue
                 if len(rest) < 2 or rest[0] not in ("--module", "--kind") or rest[0] in opts:
                     sys.exit(__doc__)
                 opts[rest[0]], rest = rest[1], rest[2:]
-            print(series(args[1], opts.get("--module"), opts.get("--kind", "ratio")))
+            print(series(args[1], opts.get("--module"), opts.get("--kind", "ratio"), require))
     except ValueError as e:
         sys.exit(f"invalid results: {e}")

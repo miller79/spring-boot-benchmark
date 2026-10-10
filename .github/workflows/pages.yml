@@ -1,0 +1,78 @@
+name: pages
+
+# Deploys the benchmark dashboard (index.html + data.js from the root of `bench-data`) to GitHub Pages.
+# A separate workflow on purpose: a Pages failure must never turn the benchmark run red, because
+# benchmark.yml uses the last green push run as the base for deciding which modules to re-benchmark.
+# A failure here is red on this workflow only and is fixed by re-running it or by a manual dispatch
+# (also the way to bootstrap the site). Pushes made with GITHUB_TOKEN do not trigger other workflows,
+# so this follows the benchmark run (workflow_run) instead of a push to bench-data.
+#
+# workflow_run workflows get write tokens even when the triggering run failed, so the job is guarded:
+# only after a default-branch push run of `benchmark`, or a manual dispatch from the default branch.
+on:
+  workflow_run:
+    workflows: [benchmark]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  deploy:
+    if: >-
+      (github.event_name == 'workflow_dispatch' &&
+        github.ref == format('refs/heads/{0}', github.event.repository.default_branch)) ||
+      (github.event_name == 'workflow_run' &&
+        github.event.workflow_run.event == 'push' &&
+        github.event.workflow_run.head_branch == github.event.repository.default_branch)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      # The default checkout is the trusted default-branch code that holds the scripts.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Check that bench-data exists
+        id: probe
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash ci/pages-probe.sh
+      - if: steps.probe.outputs.present == 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: bench-data
+          path: site
+          persist-credentials: false
+      # Only these two files are served; anything else that ends up on bench-data is not published.
+      - name: Stage the allowlisted site files
+        if: steps.probe.outputs.present == 'true'
+        run: |
+          mkdir _site
+          for f in index.html data.js; do
+            if [[ ! -s "site/$f" ]]; then
+              echo "::error::bench-data has no non-empty $f at its root; run the benchmark workflow on main first"
+              exit 1
+            fi
+            cp "site/$f" "_site/$f"
+          done
+      - if: steps.probe.outputs.present == 'true'
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: _site
+      - id: deployment
+        if: steps.probe.outputs.present == 'true'
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
