@@ -7,7 +7,9 @@ Subcommands:
 
 Each start is `docker create` + `docker start` + `docker wait`; the apps close
 themselves after startup, so "wall" is container start to exit (not time to a
-first HTTP response). While the container runs, its cgroup v2 `cpu.stat` and
+first HTTP response); it includes `docker start` latency (daemon and runc, roughly constant), which
+compresses wall ratios for very fast variants such as native. "started" is Spring's own figure and does
+not. While the container runs, its cgroup v2 `cpu.stat` and
 `memory.peak` are polled; the cgroup disappears on exit, so the last sample is
 a lower bound (very short runs may be missed entirely and are recorded as null).
 
@@ -105,12 +107,20 @@ def run_once(image, cpus, cpuset, jto, timeout):
         create += ["--cpuset-cpus", cpuset]
     if jto:
         create += ["-e", f"JAVA_TOOL_OPTIONS={jto}"]
-    cid = sh(create + [image]).stdout.strip()
     rec = {"ok": False, "exit_code": None, "timed_out": False, "oom_killed": None}
+    try:
+        cid = sh(create + [image]).stdout.strip()
+    except subprocess.CalledProcessError as e:  # a transient daemon error loses one sample, not the run
+        rec["log_tail"] = ["docker create failed: " + (e.stderr or "").strip()[-300:]]
+        return rec
     try:
         poller = CgroupPoller(cid)
         t0 = time.perf_counter()
-        sh(["docker", "start", cid])
+        try:
+            sh(["docker", "start", cid])
+        except subprocess.CalledProcessError as e:
+            rec["log_tail"] = ["docker start failed: " + (e.stderr or "").strip()[-300:]]
+            return rec
         poller.start()
         try:
             subprocess.run(["docker", "wait", cid], check=True, capture_output=True, timeout=timeout)

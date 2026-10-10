@@ -2,19 +2,27 @@
 """Summaries and trend series from bench.py results (stdlib only).
 
   report.py summary <results-dir>   markdown for $GITHUB_STEP_SUMMARY
-  report.py series  <results-dir>   customSmallerIsBetter JSON for github-action-benchmark
+  report.py series  <results-dir> [--module M]
+                                    customSmallerIsBetter JSON for github-action-benchmark;
+                                    fails (exit 1) on any malformed or non-allowlisted result
 
 Only ratios are published: variant / `plain` of the same module, measured inside
 one job. Absolute milliseconds from shared runners are not comparable across runs.
 """
 import glob
 import json
+import math
 import os
 import random
 import statistics
 import sys
 
+from bench import CPU_PROFILES, MODULES, PROFILES
+
 BOOTSTRAPS = 2000
+MAX_FILE_BYTES = 20 * 1024 * 1024
+MAX_SAMPLES = 20000
+MAX_RATIO = 100.0
 METRICS = (("started_s", "started"), ("wall_s", "wall"))
 
 
@@ -39,12 +47,71 @@ def ratio_ci(num, den, seed=1):
     return point, percentile(boots, 0.025), percentile(boots, 0.975)
 
 
-def load(results_dir):
+def _num(v, allow_none=False):
+    if v is None:
+        return allow_none
+    return isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v)
+
+
+def validate(res, path):
+    """Raise ValueError unless `res` is a well-formed bench.py result for the module named in `path`.
+
+    Results come from jobs that ran third-party build code, so names are checked against
+    allowlists (they end up in published series names, issues and comments) and metrics
+    must be finite numbers.
+    """
+    if not isinstance(res, dict):
+        raise ValueError("not an object")
+    module = res.get("module")
+    if module not in MODULES:
+        raise ValueError(f"module not allowed: {module!r}")
+    if os.path.basename(path) != f"results-{module}.json":
+        raise ValueError("file name does not match module")
+    for key in ("iterations", "repeats"):
+        if not isinstance(res.get(key), int) or isinstance(res.get(key), bool) or not 1 <= res[key] <= 1000:
+            raise ValueError(f"bad {key}")
+    variants, samples = res.get("variants"), res.get("samples")
+    if not isinstance(variants, list) or not isinstance(samples, list) or len(samples) > MAX_SAMPLES:
+        raise ValueError("bad variants/samples")
+    for v in variants:
+        if not isinstance(v, dict) or v.get("profile") not in PROFILES or v.get("side") not in ("head", "base"):
+            raise ValueError(f"bad variant: {str(v)[:80]!r}")
+    for s in samples:
+        if (not isinstance(s, dict) or s.get("cpu_profile") not in CPU_PROFILES
+                or s.get("profile") not in PROFILES or s.get("side") not in ("head", "base")
+                or not isinstance(s.get("ok"), bool) or not isinstance(s.get("repeat"), int)
+                or isinstance(s.get("repeat"), bool)):
+            raise ValueError(f"bad sample: {str(s)[:80]!r}")
+        for m in ("started_s", "wall_s"):
+            if not _num(s.get(m), allow_none=True) or (s.get(m) is not None and s[m] <= 0):
+                raise ValueError(f"bad {m}")
+        for m in ("nr_periods", "nr_throttled", "mem_peak_bytes"):
+            if not _num(s.get(m), allow_none=True):
+                raise ValueError(f"bad {m}")
+
+
+def load(results_dir, strict=False, module=None):
+    """Valid results under results_dir. Invalid files are skipped with a warning, or raise when strict."""
     out = []
-    for path in sorted(glob.glob(os.path.join(results_dir, "**", "results-*.json"), recursive=True)):
-        with open(path) as f:
-            out.append(json.load(f))
+    pattern = f"results-{module}.json" if module else "results-*.json"
+    for path in sorted(glob.glob(os.path.join(results_dir, "**", pattern), recursive=True)):
+        try:
+            if os.path.getsize(path) > MAX_FILE_BYTES:
+                raise ValueError("file too large")
+            with open(path) as f:
+                res = json.load(f, parse_constant=_reject_constant)
+            validate(res, path)
+        except (ValueError, OSError, RecursionError) as e:
+            if strict:
+                raise ValueError(f"{path}: {e}") from e
+            print(f"WARNING: skipping {path}: {e}", file=sys.stderr)
+            continue
+        out.append(res)
     return out
+
+
+def _reject_constant(name):
+    raise ValueError(f"non-finite constant {name}")
 
 
 def values(samples, metric, **flt):
@@ -129,9 +196,9 @@ def summary(results_dir):
     return "\n".join(out) if out else "No benchmark results found.\n"
 
 
-def series(results_dir):
+def series(results_dir, module=None):
     items = []
-    for res in load(results_dir):
+    for res in load(results_dir, strict=True, module=module):
         for cp in dict.fromkeys(s["cpu_profile"] for s in res["samples"]):
             for p in dict.fromkeys(v["profile"] for v in res["variants"]):
                 if p == "plain":
@@ -142,6 +209,8 @@ def series(results_dir):
                     if len(num) < 5 or len(den) < 5:
                         continue
                     point, lo, hi = ratio_ci(num, den)
+                    if not all(math.isfinite(x) for x in (point, lo, hi)) or not 0 < point < MAX_RATIO:
+                        raise ValueError(f"ratio out of range for {res['module']}/{p}/{cp}/{label}: {point}")
                     items.append({
                         "name": f"{res['module']} / {p} / {cp} / {label} ratio to plain",
                         "unit": "ratio",
@@ -153,6 +222,16 @@ def series(results_dir):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3 or sys.argv[1] not in ("summary", "series"):
+    args = sys.argv[1:]
+    if len(args) < 2 or args[0] not in ("summary", "series") or len(args) > (4 if args[0] == "series" else 2):
         sys.exit(__doc__)
-    print(summary(sys.argv[2]) if sys.argv[1] == "summary" else series(sys.argv[2]))
+    try:
+        if args[0] == "summary":
+            print(summary(args[1]))
+        else:
+            only = args[3] if len(args) == 4 and args[2] == "--module" else None
+            if len(args) > 2 and only is None:
+                sys.exit(__doc__)
+            print(series(args[1], only))
+    except ValueError as e:
+        sys.exit(f"invalid results: {e}")
