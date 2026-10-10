@@ -198,7 +198,8 @@ jobs:
   # its own series group (`name:`), so github-action-benchmark compares a module with that module's
   # previous published run, and its alerts name the module. Absolute times go to a second group
   # (`<name>-absolute`) on the same dashboard; only the ratio group alerts. The dashboard is the
-  # action's index.html at the root of `bench-data`, served by GitHub Pages (enabled in repo settings).
+  # action's index.html at the root of `bench-data`, deployed by the `deploy-pages` job (Pages source
+  # must be "GitHub Actions": pushes made with GITHUB_TOKEN do not trigger a branch-based Pages build).
   publish:
     needs: [plan, bench]
     # Only trusted code on the default branch may write history or open issues.
@@ -248,11 +249,22 @@ jobs:
         if: steps.gate.outputs.ok == 'true'
         run: |
           python3 ci/report.py series results --module "$MODULE" > ratios.json
-          python3 ci/report.py series results --module "$MODULE" --kind absolute > absolute.json
           if [[ "$(jq length ratios.json)" -gt 0 ]]; then
             echo "has_series=true" >> "$GITHUB_OUTPUT"
           else
             echo "::warning::$MODULE produced no ratio series (too few successful runs)"
+          fi
+      # Separate step so a failure here can never block the ratio publish (the alerting series).
+      - name: Build absolute series (best effort)
+        id: absolute
+        if: steps.gate.outputs.ok == 'true'
+        continue-on-error: true
+        run: |
+          python3 ci/report.py series results --module "$MODULE" --kind absolute > absolute.json
+          if [[ "$(jq length absolute.json)" -gt 0 ]]; then
+            echo "has_absolute=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::$MODULE produced no absolute series"
           fi
       - name: Ensure bench-data branch exists
         if: steps.series.outputs.has_series == 'true'
@@ -289,7 +301,7 @@ jobs:
       # inputs: shared-runner absolutes are noisy and must never gate. A failed publish only warns.
       - name: Publish absolute times (no alerting)
         id: bench_abs
-        if: steps.series.outputs.has_series == 'true'
+        if: steps.series.outputs.has_series == 'true' && steps.absolute.outputs.has_absolute == 'true'
         continue-on-error: true
         uses: benchmark-action/github-action-benchmark@4322e5726e6334590d251fc4f92bec0efafc45dc # v1.22.2
         with:
@@ -301,8 +313,8 @@ jobs:
           github-token: ${{ github.token }}
           auto-push: true
       - name: Warn if absolute times were not published
-        if: steps.bench_abs.outcome == 'failure'
-        run: echo "::warning::Absolute times for $MODULE were not published (ratio history is unaffected)"
+        if: steps.series.outputs.has_series == 'true' && steps.bench_abs.outcome != 'success'
+        run: echo "::warning::Absolute times for $MODULE were not published (absolute series failed, was empty, or publish failed); the ratio history is not affected by this"
       - name: Open or update the alert issue for this module
         if: steps.bench.outcome == 'failure'
         env:
@@ -318,3 +330,51 @@ jobs:
           else
             gh issue create --repo "$GITHUB_REPOSITORY" --title "$TITLE" --body "$body"
           fi
+
+  # Pages does not rebuild on GITHUB_TOKEN pushes, so deploy bench-data explicitly. The extra token
+  # scopes (pages: write, id-token: write) exist only on this job; it runs only after `publish`
+  # on a default-branch push in full mode (same condition), and never on PR or dispatch runs.
+  deploy-pages:
+    needs: [plan, publish]
+    if: >-
+      !cancelled() &&
+      needs.publish.result != 'skipped' &&
+      github.event_name == 'push' &&
+      github.ref == format('refs/heads/{0}', github.event.repository.default_branch) &&
+      needs.plan.outputs.mode == 'full'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    concurrency:
+      group: benchmark-pages
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Check that bench-data has a dashboard
+        id: probe
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh api "repos/$GITHUB_REPOSITORY/contents/index.html?ref=bench-data" --silent 2>/dev/null; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::bench-data or its index.html is missing or empty; skipping the Pages deploy"
+          fi
+      - if: steps.probe.outputs.present == 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: bench-data
+          path: site
+          persist-credentials: false
+      - if: steps.probe.outputs.present == 'true'
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: site
+      - id: deployment
+        if: steps.probe.outputs.present == 'true'
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
