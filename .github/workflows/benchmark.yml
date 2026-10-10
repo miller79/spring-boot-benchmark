@@ -179,7 +179,8 @@ jobs:
           retention-days: 30
 
   # One job per module that was benchmarked, run one at a time. A module whose bench job failed has
-  # no `bench-ok` marker and is reported and skipped; the others are still published. Each module is
+  # no `bench-ok` marker; its publish leg fails (the run goes red, so LAST_OK_SHA cannot advance) while
+  # the other modules are still published. Each module is
   # its own series group (`name:`), so github-action-benchmark compares a module with that module's
   # previous published run, and its alerts name the module.
   publish:
@@ -221,9 +222,10 @@ jobs:
           if [[ -f results/bench-ok ]]; then
             echo "ok=true" >> "$GITHUB_OUTPUT"
           else
-            echo "ok=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::$MODULE was not published: its bench job failed or produced no results"
-            echo "### Not published: $MODULE (bench job failed or produced no results)" >> "$GITHUB_STEP_SUMMARY"
+            # Fail the run so LAST_OK_SHA cannot advance past a module that was not published.
+            echo "::error::$MODULE was not published: its bench job failed or its results artifact is missing"
+            echo "### Not published: $MODULE (bench job failed or results artifact missing)" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
           fi
       - name: Build ratio series (validated; fails on malformed results)
         id: series
