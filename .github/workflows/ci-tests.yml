@@ -7,12 +7,12 @@ on:
   pull_request:
     paths:
       - 'ci/**'
-      - '.github/workflows/ci-tests.yml'
+      - '.github/workflows/**'
   push:
     branches: [main]
     paths:
       - 'ci/**'
-      - '.github/workflows/ci-tests.yml'
+      - '.github/workflows/**'
 
 permissions:
   contents: read
@@ -36,15 +36,25 @@ jobs:
           persist-credentials: false
       - name: Python tests
         run: |
-          for t in ci/test_report.py ci/test_bench.py ci/test_verify_published.py; do
+          for t in ci/test_report.py ci/test_bench.py ci/test_verify_published.py ci/test_workflows.py; do
             echo "::group::$t"
             python3 "$t"
             echo "::endgroup::"
           done
       - name: Shell tests
         run: |
-          for t in ci/test-plan.sh ci/test-maven.sh ci/test-clean-docker.sh; do
+          for t in ci/test-plan.sh ci/test-maven.sh ci/test-clean-docker.sh ci/test-landed.sh; do
             echo "::group::$t"
             bash "$t"
             echo "::endgroup::"
           done
+      - name: actionlint
+        env:
+          ACTIONLINT_VERSION: 1.7.12
+          ACTIONLINT_SHA256: 8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8
+        run: |
+          tgz="actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          curl -fsSL -o "$RUNNER_TEMP/$tgz" "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/$tgz"
+          echo "$ACTIONLINT_SHA256  $RUNNER_TEMP/$tgz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/$tgz" -C "$RUNNER_TEMP" actionlint
+          "$RUNNER_TEMP/actionlint"

@@ -205,9 +205,13 @@ jobs:
   #   - publish error (data not on bench-data): `landed` fails, the leg and the run go red, LAST_OK_SHA
   #     stays put and the next push retries the module.
   #   - regression alert (data published): the alert issue is opened or updated and the leg goes green.
-  #     A regression does NOT hold LAST_OK_SHA back: the data point is already published, re-running
-  #     the same commits would only re-publish the same regression, and the issue is the alert. If
-  #     opening the issue fails, the leg is red, so an alert cannot be lost silently.
+  #     A regression does NOT hold LAST_OK_SHA back: LAST_OK_SHA means "ingested", not "fast enough".
+  #     The data point is already published, and a later push compares against that already-regressed
+  #     point and stays silent, so holding LAST_OK_SHA back would re-benchmark commits for nothing.
+  #     The issue is the alert. If opening it fails (3 tries), the leg is red, so the failure is
+  #     visible; recover by re-running that run's failed jobs. That re-run alerts again (the action
+  #     ignores same-commit entries when it picks the baseline) and adds a duplicate data point. A
+  #     later push does not re-alert.
   publish:
     needs: [plan, bench]
     # Only trusted code on the default branch may write history or open issues.
@@ -308,21 +312,7 @@ jobs:
           BEFORE_SHA: ${{ steps.before.outputs.sha }}
           BENCH_OUTCOME: ${{ steps.bench.outcome }}
           DATA_FILE: dev/bench/data.js
-        run: |
-          for attempt in 1 2 3; do
-            head=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/bench-data" -q .object.sha || true)
-            if [[ -n "$head" && "$head" != "$BEFORE_SHA" ]] \
-              && gh api -H 'Accept: application/vnd.github.raw+json' \
-                "repos/$GITHUB_REPOSITORY/contents/$DATA_FILE?ref=$head" \
-              | python3 ci/verify_published.py --name "$BENCH_NAME" --sha "$GITHUB_SHA"; then
-              echo "history landed on bench-data@$head (publish step outcome: $BENCH_OUTCOME)"
-              exit 0
-            fi
-            if [[ $attempt -lt 3 ]]; then sleep 5; fi
-          done
-          echo "::error::$MODULE was not published: bench-data has no entry for this commit (publish step outcome: $BENCH_OUTCOME)"
-          echo "### Not published: $MODULE (the history push did not land; publish step outcome: $BENCH_OUTCOME)" >> "$GITHUB_STEP_SUMMARY"
-          exit 1
+        run: bash ci/landed.sh
       - name: Open or update the alert issue for this module
         if: steps.bench.outcome == 'failure'
         env:
@@ -331,10 +321,19 @@ jobs:
         run: |
           run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
           body="The benchmark action reported a failure for $MODULE at commit $GITHUB_SHA after the history was published to bench-data. This is normally a ratio-to-plain regression above the 120% threshold. See $run_url (job summary and the commit comment)."
-          existing=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "\"$TITLE\" in:title" \
-            --json number,title --jq '[.[] | select(.title == env.TITLE)][0].number // empty' || true)
-          if [[ -n "$existing" ]]; then
-            gh issue comment "$existing" --repo "$GITHUB_REPOSITORY" --body "$body"
-          else
-            gh issue create --repo "$GITHUB_REPOSITORY" --title "$TITLE" --body "$body"
-          fi
+          alert() {
+            existing=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "\"$TITLE\" in:title" \
+              --json number,title --jq '[.[] | select(.title == env.TITLE)][0].number // empty' || true)
+            if [[ -n "$existing" ]]; then
+              gh issue comment "$existing" --repo "$GITHUB_REPOSITORY" --body "$body"
+            else
+              gh issue create --repo "$GITHUB_REPOSITORY" --title "$TITLE" --body "$body"
+            fi
+          }
+          for attempt in 1 2 3; do
+            alert && exit 0
+            echo "::warning::alert issue attempt $attempt failed"
+            if [[ $attempt -lt 3 ]]; then sleep $((attempt * 5)); fi
+          done
+          echo "::error::could not open or update the alert issue for $MODULE"
+          exit 1
