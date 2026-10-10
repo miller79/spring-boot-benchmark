@@ -1,0 +1,50 @@
+name: ci-tests
+
+# Unit tests for the benchmark tooling in ci/. A separate workflow on purpose: a test failure must
+# not turn a benchmark push run red, because benchmark.yml uses the last green push run as the
+# base for deciding which modules to re-benchmark. Read-only token, no secrets, no deployments.
+on:
+  pull_request:
+    paths:
+      - 'ci/**'
+      - '.github/workflows/ci-tests.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'ci/**'
+      - '.github/workflows/ci-tests.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-tests-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Python tests
+        run: |
+          for t in ci/test_report.py ci/test_bench.py ci/test_verify_published.py; do
+            echo "::group::$t"
+            python3 "$t"
+            echo "::endgroup::"
+          done
+      - name: Shell tests
+        run: |
+          for t in ci/test-plan.sh ci/test-maven.sh ci/test-clean-docker.sh; do
+            echo "::group::$t"
+            bash "$t"
+            echo "::endgroup::"
+          done
