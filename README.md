@@ -176,4 +176,3 @@ Ran on 04/29/2026 with Spring Boot 4.0.6, JDK 25, 10 iterations per configuratio
 | spring-boot-benchmark-all-aot-aot-caching | 3.603, 4.697, 4.0012 | 4.319, 5.508, 4.8076 |
 | spring-boot-benchmark-all-alpaquita | 12.591, 14.688, 13.5187 | 13.679, 15.786, 14.5517 |
 | spring-boot-benchmark-all-native | 0.34, 0.457, 0.3828 | 0.348, 0.465, 0.3904 |
-
