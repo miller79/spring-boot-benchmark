@@ -10,6 +10,7 @@
     - [spring-boot-benchmark-activemq](#spring-boot-benchmark-activemq)
     - [spring-boot-benchmark-all](#spring-boot-benchmark-all)
   - [Build and Measure Runtimes](#build-and-measure-runtimes)
+  - [Continuous benchmarking (GitHub Actions)](#continuous-benchmarking-github-actions)
   - [Results](#results)
 
 ## Introduction
@@ -85,6 +86,45 @@ Once the application is built, the script will run the application ten times (by
 - --cpus=".6"
 - --memory=1g
 - -e="JAVA_TOOL_OPTIONS=-XX:ActiveProcessorCount=1"
+
+## Running locally / behind a corporate mirror
+
+Builds use the project's Maven wrapper (`mvnw`) by default. In an environment where the wrapper cannot download Maven (for example behind a corporate mirror), use a Maven that is already installed and, if needed, your own settings file:
+
+```bash
+export BENCH_MAVEN_MODE=system                    # wrapper (default) | system
+export BENCH_MAVEN_SETTINGS=$HOME/mirror-settings.xml   # optional, passed to Maven as -s
+./measure-runtime.sh 5
+```
+
+- `wrapper` runs `bash <module>/mvnw`. `system` runs `mvn` from `PATH` and fails with a clear message if it is missing.
+- `BENCH_MAVEN_SETTINGS` applies in both modes and must point to a readable file. Any other `BENCH_MAVEN_MODE` value is rejected.
+- Both `measure-runtime.sh` and `ci/build.sh` (used by the workflow) read the same variables. The `benchmark` workflow's manual run has matching `maven_mode` and `maven_settings` inputs; the settings path must exist on the runner.
+- Check the selection logic with `ci/test-maven.sh`.
+
+## Continuous benchmarking (GitHub Actions)
+
+The `benchmark` workflow (`.github/workflows/benchmark.yml`, drivers in `ci/`) runs the startup benchmark on GitHub-hosted `ubuntu-24.04` runners. There is no schedule: it runs only when benchmarked code changes, or manually.
+
+| Trigger | What runs |
+|---|---|
+| `pull_request` (same-repo branches only, never forks) | Only modules whose `src/`, `pom.xml` or `.mvn/` changed (or all, if `spring-boot-benchmark-parent`, `ci/` or the workflow changed). Smoke: `plain` and `aot-cds`, 0.6 CPU, 10 starts, **merge result (`refs/pull/N/merge`) vs the PR base**; a module that is new in the PR runs head only. Results appear in the job summary; nothing is commented or published. With 10 starts the p95 column is only indicative. |
+| `push` to `main` (same path filters) | Full grid for every module changed since the **last successful push run** (not just since the previous commit): 8 profiles x 0.6/1.0/2.0 CPU x 30 starts. If that run is unknown, every module runs. Ratios of each module that benchmarked successfully are appended to the `bench-data` branch; a regression alert opens (or updates) one issue per module. A module that cannot be published, or whose runs left a cell with too few successful starts (below), turns the run red. |
+| `workflow_dispatch` | Choose modules, profiles, CPU profiles and iterations (profiles and CPU profiles must be known names, iterations 1-999, duplicates are removed). Never publishes. Tick `spike` to record disk headroom, cgroup/cpuset behaviour and run-to-run noise (3 repeats). |
+
+How to read the results:
+
+- Each module builds and benchmarks in its own job (one VM). Variants run interleaved in random order, pinned to cores 2-3 with `--cpus`/`--memory`. `p06` reproduces `measure-runtime.sh`.
+- **Trust ratios to `plain` inside one job. Do not trust absolute times**, compare numbers across runs, or compare with the table below (a different machine). Shared VMs are noisy; summaries show 95% bootstrap intervals.
+- The apps close themselves after startup, so "wall" is container start to exit, and "started" is Spring's own `Started Application in` line. "wall" includes the `docker start` latency (roughly constant), which pulls wall ratios of very fast variants such as `native` towards 1; prefer "started" for those. `cpu.stat` throttling and `memory.peak` are sampled while the container runs (a lower bound).
+- History lives on the `bench-data` branch (created automatically). Each module is its own series group (`spring-boot-benchmark-<module>`): a regression alert fires when a ratio worsens by more than 20% against **that module's previous published run, and only for series present in it**. There is no confidence-interval test, only the threshold, which is a starting value until the spike measures real noise.
+- Only ratios to `plain` are published, so a regression of `plain` itself (all other ratios improve) is **not detected**.
+- Pushes that are queued behind a running benchmark can be cancelled by newer ones; no module is lost, because the next successful run covers everything changed since the last successful one. A module that failed or whose results artifact is missing is not published; its publish job fails, so the run is red and it is retried by the next push to `main`. A changed module directory unknown to `ci/plan.sh` also fails the plan instead of being skipped.
+- **Regression versus publish error.** The benchmark action fails its step the same way for a regression alert (raised after it pushed the data) and for a publish error (nothing pushed), and has no outputs to tell them apart. The publish job therefore checks `bench-data` itself: it must have moved and its `data.js` must hold this commit's entry for the module (`ci/landed.sh`, `ci/verify_published.py`). If not, the job is red and the next push retries the module. If the data landed and the action still failed, that is treated as a regression: the module issue is opened or updated and the job is green. **A regression does not hold back the "last successful push run"**: it means "ingested", not "fast enough". Its data point is already published, and a later push compares against that already-regressed point and stays silent, so holding it back would only re-benchmark commits for nothing. The issue is the alert; it is retried 3 times and, if it still cannot be opened, the job is red. Recovery is to re-run that run's failed jobs: the action ignores same-commit entries when it picks the baseline, so the re-run alerts again (and adds a duplicate data point), while a later push does not.
+- **Minimum samples.** Every variant and CPU profile needs at least 5 successful starts (`MIN_OK_SAMPLES` in `ci/bench.py`, the same number `ci/report.py` needs to publish a ratio; if fewer than 5 starts are scheduled in total, all must succeed). Otherwise the bench job fails and the module is not published. The publish job checks this again from the results file (which records the expected CPU profiles): an empty series or any cell below the minimum fails it (`report.py series --require-nonempty`). A failed `docker wait` or `docker inspect` marks that start as failed with the reason in the results file.
+- `ci/build.sh` removes the buildpack cache volumes (`pack-cache-*.build`/`.launch`, which are named, so `docker volume prune` does not touch them) after each image; `disk.log` still records disk use.
+- Unit tests for `ci/` run in the separate `ci-tests` workflow (read-only token, no secrets; separate so a test failure cannot hold back benchmark pushes). Locally: `python3 ci/test_report.py`, `python3 ci/test_bench.py`, `python3 ci/test_verify_published.py`, `ci/test-plan.sh`, `ci/test-maven.sh`, `python3 ci/test_workflows.py`, `ci/test-clean-docker.sh`, `ci/test-landed.sh`. The workflow also runs actionlint, and runs on any change under `.github/workflows/`.
+- Benchmark jobs are not meant to be required checks. A failed or noisy run still shows a red check on the PR, but does not block merging unless someone makes it required (this includes Dependabot PRs). `github-actions` updates keep the pinned action SHAs current.
 
 ## Results
 

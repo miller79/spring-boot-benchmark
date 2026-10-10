@@ -7,6 +7,10 @@
 set -e
 set -o pipefail
 
+# Maven mode: BENCH_MAVEN_MODE=wrapper (default) | system, optional BENCH_MAVEN_SETTINGS=<file>; see README.
+# shellcheck source=ci/maven.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/ci/maven.sh"
+
 declare -A results
 declare -a resultsOrdered
 declare currentResult=0
@@ -109,7 +113,8 @@ buildAndRunTest () {
   local -a testProcessTimes
 
   echo "Building $fullProjectName..."
-  $projectName/mvnw -f $projectName/pom.xml -P$projectType clean spring-boot:build-image -DimageName=$fullProjectName
+  maven_setup "$projectName" || exit 1
+  "${MVN[@]}" -f $projectName/pom.xml -P$projectType clean spring-boot:build-image -DimageName=$fullProjectName
   
   echo "Running $fullProjectName for logging purposes..."
   timeout 120 docker run --rm --cpus=".6" --memory=1g -e="JAVA_TOOL_OPTIONS=-XX:ActiveProcessorCount=1" docker.io/library/$fullProjectName:LOCAL-SNAPSHOT || echo "WARNING: Logging run for $fullProjectName failed or timed out"

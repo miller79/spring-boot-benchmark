@@ -1,0 +1,62 @@
+name: ci-tests
+
+# Unit tests for the benchmark tooling in ci/. A separate workflow on purpose: a test failure must
+# not turn a benchmark push run red, because benchmark.yml uses the last green push run as the
+# base for deciding which modules to re-benchmark. Read-only token, no secrets, no deployments.
+on:
+  pull_request:
+    paths:
+      - 'ci/**'
+      - '.github/workflows/**'
+  push:
+    branches: [main]
+    paths:
+      - 'ci/**'
+      - '.github/workflows/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-tests-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Python tests
+        run: |
+          for t in ci/test_report.py ci/test_bench.py ci/test_verify_published.py ci/test_workflows.py; do
+            echo "::group::$t"
+            python3 "$t"
+            echo "::endgroup::"
+          done
+      - name: Shell tests
+        run: |
+          for t in ci/test-plan.sh ci/test-maven.sh ci/test-clean-docker.sh ci/test-landed.sh; do
+            echo "::group::$t"
+            bash "$t"
+            echo "::endgroup::"
+          done
+      - name: actionlint
+        env:
+          ACTIONLINT_VERSION: 1.7.12
+          ACTIONLINT_SHA256: 8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8
+        run: |
+          # actionlint only lints `run:` scripts when shellcheck is on PATH; do not let that lapse silently.
+          command -v shellcheck
+          tgz="actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          curl -fsSL -o "$RUNNER_TEMP/$tgz" "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/$tgz"
+          echo "$ACTIONLINT_SHA256  $RUNNER_TEMP/$tgz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/$tgz" -C "$RUNNER_TEMP" actionlint
+          "$RUNNER_TEMP/actionlint"

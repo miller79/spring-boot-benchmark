@@ -1,0 +1,339 @@
+name: benchmark
+
+# Relative startup benchmark on GitHub-hosted runners. Ratios to `plain` inside one job are
+# the only numbers to trust; see the "Continuous benchmarking" section of the README.
+# No schedule on purpose: it runs only when benchmarked code changes (or by hand).
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'spring-boot-benchmark-*/src/**'
+      - 'spring-boot-benchmark-*/pom.xml'
+      - 'spring-boot-benchmark-*/.mvn/**'
+      - 'ci/**'
+      - '.github/workflows/benchmark.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'spring-boot-benchmark-*/src/**'
+      - 'spring-boot-benchmark-*/pom.xml'
+      - 'spring-boot-benchmark-*/.mvn/**'
+      - 'ci/**'
+      - '.github/workflows/benchmark.yml'
+  workflow_dispatch:
+    inputs:
+      modules:
+        description: 'Comma list of modules (original,tomcat,data-jpa,data-rest,activemq,all) or all-modules'
+        default: 'all-modules'
+      profiles:
+        description: 'Comma list of build profiles'
+        default: 'plain,aot,cds,aot-cds,aot-caching,aot-aot-caching,alpaquita,native'
+      cpu_profiles:
+        description: 'p06 = 0.6 CPU (as measure-runtime.sh), p10 = 1.0, p20 = 2.0'
+        default: 'p06,p10,p20'
+      iterations:
+        description: 'Cold starts per variant and CPU profile'
+        default: '30'
+      maven_mode:
+        description: 'wrapper = project mvnw (default); system = mvn on PATH, for runners that cannot download Maven'
+        type: choice
+        options: [wrapper, system]
+        default: wrapper
+      maven_settings:
+        description: 'Optional path to a Maven settings file on the runner (passed as -s), e.g. for a corporate mirror'
+        default: ''
+      spike:
+        description: 'Spike: module original, 3 repeats, plain/aot-cds/native; records disk, cgroup and noise. Overrides the other inputs'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+# PR runs are cancelled when superseded. Pushes to main and manual runs queue instead, but GitHub
+# keeps only one pending run per group, so a third push still cancels the pending second one. That
+# cannot lose a module: on push, `plan` diffs against the head of the last *successful* push run
+# (LAST_OK_SHA) rather than the previous commit, and falls back to every module when it is unknown.
+# This group also serialises the publish jobs of successive runs (they push to `bench-data`).
+concurrency:
+  group: benchmark-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  plan:
+    # Never run PR code from forks on this workflow: same-repo branches only (includes Dependabot).
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      modules: ${{ steps.plan.outputs.modules }}
+      mode: ${{ steps.plan.outputs.mode }}
+      profiles: ${{ steps.plan.outputs.profiles }}
+      cpu_profiles: ${{ steps.plan.outputs.cpu_profiles }}
+      iterations: ${{ steps.plan.outputs.iterations }}
+      repeats: ${{ steps.plan.outputs.repeats }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Find the last successful push run (diff base for pushes)
+        id: last
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          sha=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow benchmark.yml --branch "$BRANCH" \
+            --event push --status success --limit 1 --json headSha --jq '.[0].headSha // ""' || true)
+          echo "last_ok_sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "last successful push run: ${sha:-none}"
+      - id: plan
+        run: ./ci/plan.sh
+        env:
+          LAST_OK_SHA: ${{ steps.last.outputs.last_ok_sha }}
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          INPUT_MODULES: ${{ inputs.modules }}
+          INPUT_PROFILES: ${{ inputs.profiles }}
+          INPUT_CPU_PROFILES: ${{ inputs.cpu_profiles }}
+          INPUT_ITERATIONS: ${{ inputs.iterations }}
+          INPUT_SPIKE: ${{ inputs.spike }}
+
+  bench:
+    needs: plan
+    if: needs.plan.outputs.modules != '[]'
+    name: bench (${{ matrix.module }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: ${{ needs.plan.outputs.mode == 'smoke' && 120 || 340 }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        module: ${{ fromJSON(needs.plan.outputs.modules) }}
+    env:
+      MODULE: ${{ matrix.module }}
+      MODE: ${{ needs.plan.outputs.mode }}
+      PROFILES: ${{ needs.plan.outputs.profiles }}
+      CPU_PROFILES: ${{ needs.plan.outputs.cpu_profiles }}
+      ITERATIONS: ${{ needs.plan.outputs.iterations }}
+      REPEATS: ${{ needs.plan.outputs.repeats }}
+      CPUSET: '2,3'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Checkout PR base for the head-vs-base comparison
+        if: needs.plan.outputs.mode == 'smoke'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: base
+          persist-credentials: false
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+      - name: Prepare host (cgroup v2 check, disk, cpuset probe, env.json)
+        run: ./ci/prepare-host.sh "$CPUSET" results
+      - name: Build head images
+        env:
+          BENCH_MAVEN_MODE: ${{ inputs.maven_mode }}
+          BENCH_MAVEN_SETTINGS: ${{ inputs.maven_settings }}
+        run: ./ci/build.sh "$MODULE" "$GITHUB_WORKSPACE" head "$PROFILES" results
+      - name: Detect whether the module exists on the PR base
+        id: base
+        if: needs.plan.outputs.mode == 'smoke'
+        run: |
+          if [[ -d "base/spring-boot-benchmark-$MODULE" ]]; then
+            echo "has_base=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_base=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::$MODULE is new in this PR; benchmarking head only (no base to compare)"
+          fi
+      - name: Build base images
+        if: needs.plan.outputs.mode == 'smoke' && steps.base.outputs.has_base == 'true'
+        env:
+          BENCH_MAVEN_MODE: ${{ inputs.maven_mode }}
+          BENCH_MAVEN_SETTINGS: ${{ inputs.maven_settings }}
+        run: ./ci/build.sh "$MODULE" "$GITHUB_WORKSPACE/base" base "$PROFILES" results
+      - name: Benchmark (interleaved cold starts, cores pinned, cpu.stat, memory.peak)
+        env:
+          HAS_BASE: ${{ steps.base.outputs.has_base }}
+        run: |
+          sides="head"
+          if [[ "$MODE" == "smoke" && "$HAS_BASE" == "true" ]]; then sides=head,base; fi
+          python3 ci/bench.py run --module "$MODULE" --profiles "$PROFILES" --sides "$sides" \
+            --cpu-profiles "$CPU_PROFILES" --iterations "$ITERATIONS" --repeats "$REPEATS" \
+            --cpuset "$CPUSET" --out results
+      - name: Mark module complete (publish only uses modules with this marker)
+        run: echo ok > results/bench-ok
+      - name: Summary
+        if: always()
+        run: |
+          python3 ci/report.py summary results >> "$GITHUB_STEP_SUMMARY"
+          if [[ "$MODE" == "spike" ]]; then
+            { echo '## Spike: host facts'; echo '```'; cat results/env.json results/cgroup-probe.log results/disk.log || true; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: results-${{ matrix.module }}
+          path: results/
+          retention-days: 30
+
+  # One job per module that was benchmarked, run one at a time. A module whose bench job failed has
+  # no `bench-ok` marker; its publish leg fails (the run goes red, so LAST_OK_SHA cannot advance) while
+  # the other modules are still published. Each module is
+  # its own series group (`name:`), so github-action-benchmark compares a module with that module's
+  # previous published run, and its alerts name the module.
+  #
+  # Alert versus error. The action (v1.22.2) has no outputs and fails the step the same way for a
+  # regression alert (raised after it pushed) and for a publish error (nothing pushed), so the step
+  # outcome alone cannot tell them apart. The `landed` step asks the data instead: the run is red
+  # unless `bench-data` moved and its data.js holds this commit's entry for this module.
+  #   - publish error (data not on bench-data): `landed` fails, the leg and the run go red, LAST_OK_SHA
+  #     stays put and the next push retries the module.
+  #   - regression alert (data published): the alert issue is opened or updated and the leg goes green.
+  #     A regression does NOT hold LAST_OK_SHA back: LAST_OK_SHA means "ingested", not "fast enough".
+  #     The data point is already published, and a later push compares against that already-regressed
+  #     point and stays silent, so holding LAST_OK_SHA back would re-benchmark commits for nothing.
+  #     The issue is the alert. If opening it fails (3 tries), the leg is red, so the failure is
+  #     visible; recover by re-running that run's failed jobs. That re-run alerts again (the action
+  #     ignores same-commit entries when it picks the baseline) and adds a duplicate data point. A
+  #     later push does not re-alert.
+  publish:
+    needs: [plan, bench]
+    # Only trusted code on the default branch may write history or open issues.
+    if: >-
+      !cancelled() &&
+      github.event_name == 'push' &&
+      github.ref == format('refs/heads/{0}', github.event.repository.default_branch) &&
+      needs.plan.outputs.mode == 'full' &&
+      needs.bench.result != 'skipped'
+    name: publish (${{ matrix.module }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      issues: write
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        module: ${{ fromJSON(needs.plan.outputs.modules) }}
+    env:
+      MODULE: ${{ matrix.module }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Download this module's results
+        id: download
+        continue-on-error: true
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: results-${{ matrix.module }}
+          path: results
+      - name: Check that the module benchmarked successfully
+        id: gate
+        run: |
+          if [[ -f results/bench-ok ]]; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            # Fail the run so LAST_OK_SHA cannot advance past a module that was not published.
+            echo "::error::$MODULE was not published: its bench job failed or its results artifact is missing"
+            echo "### Not published: $MODULE (bench job failed or results artifact missing)" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+      - name: Build ratio series (validated; fails on malformed results)
+        id: series
+        if: steps.gate.outputs.ok == 'true'
+        run: |
+          # A module that passed the bench checkpoint must yield ratios: an empty series is an error.
+          python3 ci/report.py series results --module "$MODULE" --require-nonempty > ratios.json
+          echo "has_series=true" >> "$GITHUB_OUTPUT"
+      - name: Ensure bench-data branch exists
+        if: steps.series.outputs.has_series == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/bench-data" --silent 2>/dev/null; then
+            exit 0
+          fi
+          blob=$(gh api -X POST "repos/$GITHUB_REPOSITORY/git/blobs" -f encoding=utf-8 \
+            -f content='Benchmark history written by the benchmark workflow. Do not edit.' -q .sha)
+          tree=$(printf '{"tree":[{"path":"README.md","mode":"100644","type":"blob","sha":"%s"}]}' "$blob" \
+            | gh api -X POST "repos/$GITHUB_REPOSITORY/git/trees" --input - -q .sha)
+          commit=$(gh api -X POST "repos/$GITHUB_REPOSITORY/git/commits" -f message='Initialise bench-data' -f tree="$tree" -q .sha)
+          gh api -X POST "repos/$GITHUB_REPOSITORY/git/refs" -f ref=refs/heads/bench-data -f sha="$commit" --silent
+      - name: Record the bench-data head before publishing
+        id: before
+        if: steps.series.outputs.has_series == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sha=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/bench-data" -q .object.sha)
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+      - name: Publish history and check for regressions
+        id: bench
+        if: steps.series.outputs.has_series == 'true'
+        continue-on-error: true
+        uses: benchmark-action/github-action-benchmark@4322e5726e6334590d251fc4f92bec0efafc45dc # v1.22.2
+        with:
+          name: spring-boot-benchmark-${{ matrix.module }}
+          tool: customSmallerIsBetter
+          output-file-path: ratios.json
+          gh-pages-branch: bench-data
+          github-token: ${{ github.token }}
+          auto-push: true
+          summary-always: true
+          alert-threshold: '120%'
+          comment-on-alert: true
+          fail-on-alert: true
+      # The action cannot say whether it failed on an alert or on a push (see the comment above the
+      # job), so check that this run's data is on bench-data. Fails the leg when it is not.
+      - name: Verify the history push landed (publish error versus alert)
+        id: landed
+        if: steps.series.outputs.has_series == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BENCH_NAME: spring-boot-benchmark-${{ matrix.module }}
+          BEFORE_SHA: ${{ steps.before.outputs.sha }}
+          BENCH_OUTCOME: ${{ steps.bench.outcome }}
+          DATA_FILE: dev/bench/data.js
+        run: bash ci/landed.sh
+      - name: Open or update the alert issue for this module
+        if: steps.bench.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TITLE: 'Benchmark alert: ${{ matrix.module }}'
+        run: |
+          run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          body="The benchmark action reported a failure for $MODULE at commit $GITHUB_SHA after the history was published to bench-data. This is normally a ratio-to-plain regression above the 120% threshold. See $run_url (job summary and the commit comment)."
+          alert() {
+            existing=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "\"$TITLE\" in:title" \
+              --json number,title --jq '[.[] | select(.title == env.TITLE)][0].number // empty' || true)
+            if [[ -n "$existing" ]]; then
+              gh issue comment "$existing" --repo "$GITHUB_REPOSITORY" --body "$body"
+            else
+              gh issue create --repo "$GITHUB_REPOSITORY" --title "$TITLE" --body "$body"
+            fi
+          }
+          for attempt in 1 2 3; do
+            alert && exit 0
+            echo "::warning::alert issue attempt $attempt failed"
+            if [[ $attempt -lt 3 ]]; then sleep $((attempt * 5)); fi
+          done
+          echo "::error::could not open or update the alert issue for $MODULE"
+          exit 1
