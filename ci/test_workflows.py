@@ -233,6 +233,23 @@ class WorkflowTests(unittest.TestCase):
         self.assertNotIn("secrets.", text)
         self.assertIn("command -v shellcheck", text)
 
+    def test_publish_guard_flips_are_caught_one_by_one(self):
+        publish = job(self.bench, "publish")
+        self.assertEqual(" ".join(guard(publish).split()), PUBLISH_GUARD)
+        for old, new in (("github.event_name == 'push' &&", "github.event_name == 'push' ||"),
+                         ("needs.plan.outputs.mode == 'full' &&", "needs.plan.outputs.mode == 'full' ||"),
+                         ("!cancelled() &&", "!cancelled() ||"),
+                         ("needs.bench.result != 'skipped'", "true")):
+            with self.subTest(old=old):
+                self.assertNotEqual(check_benchmark(self.mutate(self.bench, old, new)), [])
+
+    def test_landed_reads_the_file_the_action_writes(self):
+        self.assertEqual(check_data_file(self.bench), [])
+        with_dir = self.bench.replace("          gh-pages-branch: bench-data\n", "          gh-pages-branch: bench-data\n          benchmark-data-dir-path: 'other'\n", 1)
+        self.assertNotEqual(check_data_file(with_dir), [])  # dir changed, DATA_FILE not
+        self.assertEqual(check_data_file(with_dir.replace("DATA_FILE: data.js", "DATA_FILE: other/data.js")), [])
+        self.assertNotEqual(check_data_file(self.bench.replace("DATA_FILE: data.js", "DATA_FILE: dev/bench/data.js")), [])
+
     def test_pages_scopes_only_in_pages_workflow(self):
         self.assertNotEqual(check_benchmark(self.mutate(
             self.bench, "  publish:\n", "  deploy-pages:\n    permissions:\n      pages: write\n      id-token: write\n  publish:\n")), [])
