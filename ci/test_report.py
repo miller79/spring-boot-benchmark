@@ -180,6 +180,47 @@ class ReportTests(unittest.TestCase):
         self.assertEqual(p.returncode, 0, p.stderr)
         self.assertEqual(len(json.loads(p.stdout)), 2)
 
+    def test_min_samples_is_shared_with_bench(self):
+        import bench
+        self.assertIs(report.MIN_OK_SAMPLES, bench.MIN_OK_SAMPLES)
+
+    def _drop_ok(self, keep):
+        res = good()
+        seen = {"aot": 0, "plain": 0}
+        for s in res["samples"]:
+            seen[s["profile"]] += 1
+            if s["profile"] == "aot" and seen["aot"] > keep:
+                s["ok"] = False
+        return res
+
+    def test_series_needs_exactly_the_shared_minimum(self):
+        self.write(self._drop_ok(report.MIN_OK_SAMPLES))
+        self.assertEqual(len(self.series()), 2)
+        self.write(self._drop_ok(report.MIN_OK_SAMPLES - 1))
+        self.assertEqual(self.series(), [])
+
+    def test_require_nonempty_raises_on_empty_series(self):
+        self.write(self._drop_ok(report.MIN_OK_SAMPLES - 1))
+        with self.assertRaises(ValueError):
+            report.series(self.dir, module="tomcat", require_nonempty=True)
+        self.write(good())
+        self.assertEqual(len(json.loads(report.series(self.dir, module="tomcat", require_nonempty=True))), 2)
+
+    def test_cli_require_nonempty_fails_on_empty_series(self):
+        self.write(self._drop_ok(0))
+        cmd = [sys.executable, os.path.join(HERE, "report.py"), "series", self.dir, "--module", "tomcat"]
+        p = subprocess.run(cmd, capture_output=True, text=True)
+        self.assertEqual((p.returncode, json.loads(p.stdout)), (0, []))
+        p = subprocess.run(cmd + ["--require-nonempty"], capture_output=True, text=True)
+        self.assertNotEqual(p.returncode, 0)
+        self.assertEqual(p.stdout, "")
+        self.assertIn("empty ratio series", p.stderr)
+
+    def test_cli_require_nonempty_rejected_for_summary(self):
+        p = subprocess.run([sys.executable, os.path.join(HERE, "report.py"), "summary", self.dir, "--require-nonempty"],
+                           capture_output=True, text=True)
+        self.assertNotEqual(p.returncode, 0)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

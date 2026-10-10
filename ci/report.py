@@ -2,9 +2,10 @@
 """Summaries and trend series from bench.py results (stdlib only).
 
   report.py summary <results-dir>   markdown for $GITHUB_STEP_SUMMARY
-  report.py series  <results-dir> [--module M]
+  report.py series  <results-dir> [--module M] [--require-nonempty]
                                     customSmallerIsBetter JSON for github-action-benchmark;
-                                    fails (exit 1) on any malformed or non-allowlisted result
+                                    fails (exit 1) on any malformed or non-allowlisted result,
+                                    and, with --require-nonempty, when the series would be empty
 
 Only ratios are published: variant / `plain` of the same module, measured inside
 one job. Absolute milliseconds from shared runners are not comparable across runs.
@@ -17,7 +18,7 @@ import random
 import statistics
 import sys
 
-from bench import CPU_PROFILES, MODULES, PROFILES
+from bench import CPU_PROFILES, MIN_OK_SAMPLES, MODULES, PROFILES
 
 BOOTSTRAPS = 2000
 MAX_FILE_BYTES = 20 * 1024 * 1024
@@ -196,7 +197,7 @@ def summary(results_dir):
     return "\n".join(out) if out else "No benchmark results found.\n"
 
 
-def series(results_dir, module=None):
+def series(results_dir, module=None, require_nonempty=False):
     items = []
     loaded = load(results_dir, strict=True, module=module)
     if module and not loaded:
@@ -209,7 +210,7 @@ def series(results_dir, module=None):
                 for metric, label in METRICS:
                     num = values(res["samples"], metric, cpu_profile=cp, side="head", profile=p)
                     den = values(res["samples"], metric, cpu_profile=cp, side="head", profile="plain")
-                    if len(num) < 5 or len(den) < 5:
+                    if len(num) < MIN_OK_SAMPLES or len(den) < MIN_OK_SAMPLES:
                         continue
                     point, lo, hi = ratio_ci(num, den)
                     if not all(math.isfinite(x) for x in (point, lo, hi)) or not 0 < point < MAX_RATIO:
@@ -221,12 +222,17 @@ def series(results_dir, module=None):
                         "range": f"[{lo:.3f}, {hi:.3f}]",
                         "extra": f"n={len(num)} vs plain n={len(den)}",
                     })
+    if require_nonempty and not items:
+        raise ValueError(f"empty ratio series: no cell has {MIN_OK_SAMPLES}+ ok samples for both a variant and plain")
     return json.dumps(items, indent=1)
 
 
 if __name__ == "__main__":
     args = sys.argv[1:]
-    if len(args) < 2 or args[0] not in ("summary", "series") or len(args) > (4 if args[0] == "series" else 2):
+    flags = [a for a in args[2:] if a == "--require-nonempty"]
+    args = args[:2] + [a for a in args[2:] if a != "--require-nonempty"]
+    if len(args) < 2 or args[0] not in ("summary", "series") or len(args) > (4 if args[0] == "series" else 2) \
+            or (flags and args[0] != "series"):
         sys.exit(__doc__)
     try:
         if args[0] == "summary":
@@ -235,6 +241,6 @@ if __name__ == "__main__":
             only = args[3] if len(args) == 4 and args[2] == "--module" else None
             if len(args) > 2 and only is None:
                 sys.exit(__doc__)
-            print(series(args[1], only))
+            print(series(args[1], only, bool(flags)))
     except ValueError as e:
         sys.exit(f"invalid results: {e}")

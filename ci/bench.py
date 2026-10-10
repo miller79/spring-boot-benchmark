@@ -37,6 +37,9 @@ CPU_PROFILES = {
 }
 MODULES = ["original", "tomcat", "data-jpa", "data-rest", "activemq", "all"]
 PROFILES = ["plain", "aot", "cds", "aot-cds", "aot-caching", "aot-aot-caching", "alpaquita", "native"]
+# Fewest ok samples a variant/cpu_profile cell needs for report.py to publish a ratio from it
+# (report.py imports this too, so the checkpoint here and the series there cannot drift apart).
+MIN_OK_SAMPLES = 5
 STARTED_RE = re.compile(r"Started Application in ([0-9.]+) seconds")
 PROCESS_RE = re.compile(r"process running for ([0-9.]+)")
 CGROUP_PATTERNS = ("/sys/fs/cgroup/system.slice/docker-{}.scope", "/sys/fs/cgroup/docker/{}")
@@ -49,6 +52,10 @@ def image_name(module, profile, side):
 
 def sh(args, **kw):
     return subprocess.run(args, check=True, capture_output=True, text=True, **kw)
+
+
+def _err_text(e):
+    return (getattr(e, "stderr", None) or str(e) or type(e).__name__).strip()[-300:]
 
 
 def try_out(args, stream="stdout"):
@@ -127,11 +134,21 @@ def run_once(image, cpus, cpuset, jto, timeout):
         except subprocess.TimeoutExpired:
             rec["timed_out"] = True
             subprocess.run(["docker", "kill", cid], capture_output=True)
+        except (subprocess.CalledProcessError, OSError) as e:  # container state unknown: never count it as ok
+            poller.stop()
+            rec["log_tail"] = ["docker wait failed: " + _err_text(e)]
+            return rec
         t1 = time.perf_counter()
         poller.stop()
-        state = sh(["docker", "inspect", "-f", "{{.State.ExitCode}} {{.State.OOMKilled}}", cid]).stdout.split()
-        rec["exit_code"] = int(state[0])
-        rec["oom_killed"] = state[1] == "true"
+        try:
+            state = sh(["docker", "inspect", "-f", "{{.State.ExitCode}} {{.State.OOMKilled}}", cid]).stdout.split()
+            rec["exit_code"] = int(state[0])
+            rec["oom_killed"] = state[1] == "true"
+        except (subprocess.CalledProcessError, OSError, ValueError, IndexError) as e:
+            rec["exit_code"] = None
+            rec["oom_killed"] = None
+            rec["log_tail"] = ["docker inspect failed: " + _err_text(e)]
+            return rec
         logs = subprocess.run(["docker", "logs", cid], capture_output=True, text=True)
         text = logs.stdout + logs.stderr
         started = STARTED_RE.search(text)
@@ -248,10 +265,28 @@ def cmd_run(args):
             print(f"done repeat={repeat} cpu_profile={cp}", flush=True)
     result["finished_at"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
     flush()
-    bad = [v for v in variants
-           if not any(s["ok"] for s in result["samples"] if s["side"] == v["side"] and s["profile"] == v["profile"])]
+    bad = insufficient_cells(result, args.cpu_profiles.split(","))
     if bad:
-        sys.exit(f"no successful run for: {[(v['side'], v['profile']) for v in bad]}")
+        sys.exit("too few successful runs (need %d per cell, or all of them if fewer are run): %s"
+                 % (needed_samples(args.iterations, args.repeats), "; ".join(bad)))
+
+
+def needed_samples(iterations, repeats):
+    """Ok samples each variant/cpu_profile cell must have: the shared minimum, or every run when fewer are scheduled."""
+    return min(MIN_OK_SAMPLES, iterations * repeats)
+
+
+def insufficient_cells(result, cpu_profiles):
+    """Describe every variant/cpu_profile cell with fewer ok samples than needed_samples() (empty list: all good)."""
+    need = needed_samples(result["iterations"], result["repeats"])
+    bad = []
+    for cp in [c for c in cpu_profiles if c]:
+        for v in result["variants"]:
+            ok = sum(1 for s in result["samples"] if s["ok"] and s["cpu_profile"] == cp
+                     and s["side"] == v["side"] and s["profile"] == v["profile"])
+            if ok < need:
+                bad.append(f"{v['side']}/{v['profile']}/{cp}: {ok} ok")
+    return bad
 
 
 def main():
