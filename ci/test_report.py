@@ -268,5 +268,60 @@ class ReportTests(unittest.TestCase):
         self.assertNotEqual(p.returncode, 0)
 
 
+    def test_absolute_series_includes_plain_in_ms(self):
+        self.write(good())
+        items = self.series(kind="absolute")
+        self.assertEqual(len(items), 4)  # plain + aot, started + wall
+        by = {i["name"]: i for i in items}
+        plain = by["tomcat / plain / p06 / started median ms"]
+        self.assertEqual(plain["unit"], "ms")
+        self.assertAlmostEqual(plain["value"], 2025.0, places=1)  # median of 2.00..2.05 s
+        self.assertAlmostEqual(by["tomcat / aot / p06 / wall median ms"]["value"], 1525.0, places=1)
+        self.assertIn("n=6", plain["extra"])
+
+    def test_absolute_names_never_collide_with_ratio_names(self):
+        self.write(good())
+        ratio = {i["name"] for i in self.series()}
+        absolute = {i["name"] for i in self.series(kind="absolute")}
+        self.assertFalse(ratio & absolute)
+        self.assertTrue(all(n.endswith("ratio to plain") for n in ratio))
+
+    def test_ratio_series_unchanged_by_default_kind(self):
+        self.write(good())
+        self.assertEqual(report.series(self.dir), report.series(self.dir, kind="ratio"))
+        self.assertEqual(len(self.series()), 2)
+
+    def test_absolute_skips_variants_with_too_few_samples(self):
+        res = good()
+        res["samples"] = [s for s in res["samples"] if not (s["profile"] == "aot" and s["iteration"] >= 3)]
+        self.write(res)
+        names = [i["name"] for i in self.series(kind="absolute")]
+        self.assertEqual(len(names), 2)
+        self.assertTrue(all("/ plain /" in n for n in names))
+
+    def test_absolute_validates_like_ratio(self):
+        self.rejected(self.mutated(lambda r: r.update(module="evil")), kind="absolute")
+        raw = json.dumps(good()).replace('"started_s": 2.0,', '"started_s": 1e999,', 1)
+        self.write(good(), raw=raw)
+        with self.assertRaises(ValueError):
+            report.series(self.dir, kind="absolute")
+
+    def test_unknown_kind_rejected(self):
+        self.write(good())
+        with self.assertRaises(ValueError):
+            report.series(self.dir, kind="evil")
+
+    def test_cli_absolute_and_bad_kind(self):
+        self.write(good())
+        cli = [sys.executable, os.path.join(HERE, "report.py"), "series", self.dir, "--module", "tomcat"]
+        p = subprocess.run(cli + ["--kind", "absolute"], capture_output=True, text=True)
+        self.assertEqual(p.returncode, 0, p.stderr)
+        self.assertEqual(len(json.loads(p.stdout)), 4)
+        for extra in (["--kind", "evil"], ["--kind"], ["--module", "tomcat"], ["--bogus", "x"]):
+            p = subprocess.run(cli + extra, capture_output=True, text=True)
+            self.assertNotEqual(p.returncode, 0, extra)
+            self.assertEqual(p.stdout, "")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
