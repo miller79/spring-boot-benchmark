@@ -34,6 +34,14 @@ on:
       iterations:
         description: 'Cold starts per variant and CPU profile'
         default: '30'
+      maven_mode:
+        description: 'wrapper = project mvnw (default); system = mvn on PATH, for runners that cannot download Maven'
+        type: choice
+        options: [wrapper, system]
+        default: wrapper
+      maven_settings:
+        description: 'Optional path to a Maven settings file on the runner (passed as -s), e.g. for a corporate mirror'
+        default: ''
       spike:
         description: 'Spike: module original, 3 repeats, plain/aot-cds/native; records disk, cgroup and noise. Overrides the other inputs'
         type: boolean
@@ -139,6 +147,9 @@ jobs:
       - name: Prepare host (cgroup v2 check, disk, cpuset probe, env.json)
         run: ./ci/prepare-host.sh "$CPUSET" results
       - name: Build head images
+        env:
+          BENCH_MAVEN_MODE: ${{ inputs.maven_mode }}
+          BENCH_MAVEN_SETTINGS: ${{ inputs.maven_settings }}
         run: ./ci/build.sh "$MODULE" "$GITHUB_WORKSPACE" head "$PROFILES" results
       - name: Detect whether the module exists on the PR base
         id: base
@@ -152,6 +163,9 @@ jobs:
           fi
       - name: Build base images
         if: needs.plan.outputs.mode == 'smoke' && steps.base.outputs.has_base == 'true'
+        env:
+          BENCH_MAVEN_MODE: ${{ inputs.maven_mode }}
+          BENCH_MAVEN_SETTINGS: ${{ inputs.maven_settings }}
         run: ./ci/build.sh "$MODULE" "$GITHUB_WORKSPACE/base" base "$PROFILES" results
       - name: Benchmark (interleaved cold starts, cores pinned, cpu.stat, memory.peak)
         env:

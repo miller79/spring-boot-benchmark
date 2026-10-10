@@ -2,6 +2,7 @@
 # Builds one image per profile for a module (sequentially) and records disk use.
 # Usage: build.sh <module> <source-root> <side: head|base> <profiles,comma,separated> <results-dir>
 # Image names must match image_name() in bench.py.
+# Maven comes from BENCH_MAVEN_MODE=wrapper|system and BENCH_MAVEN_SETTINGS (see ci/maven.sh).
 set -euo pipefail
 
 MODULE="${1:?module}"
@@ -13,13 +14,15 @@ OUT="${5:?results dir}"
 [[ "$SIDE" == "head" ]] && SUFFIX="" || SUFFIX="-$SIDE"
 mkdir -p "$OUT"
 IFS=, read -ra LIST <<< "$PROFILES"
+# shellcheck source=maven.sh
+source "$(dirname "${BASH_SOURCE[0]}")/maven.sh"
+maven_setup "$ROOT/spring-boot-benchmark-$MODULE" || exit 1
 
 for profile in "${LIST[@]}"; do
   name="spring-boot-benchmark-$MODULE-$profile$SUFFIX"
   echo "::group::build $SIDE $MODULE $profile"
   start=$(date +%s)
-  # Run through bash: the wrappers are committed as mode 100644, so executing them directly fails (rc=126).
-  bash "$ROOT/spring-boot-benchmark-$MODULE/mvnw" -B -ntp -DskipTests \
+  "${MVN[@]}" -B -ntp -DskipTests \
     -f "$ROOT/spring-boot-benchmark-$MODULE/pom.xml" "-P$profile" \
     clean spring-boot:build-image "-DimageName=$name"
   echo "built $name in $(( $(date +%s) - start ))s"

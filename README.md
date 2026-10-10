@@ -87,6 +87,21 @@ Once the application is built, the script will run the application ten times (by
 - --memory=1g
 - -e="JAVA_TOOL_OPTIONS=-XX:ActiveProcessorCount=1"
 
+## Running locally / behind a corporate mirror
+
+Builds use the project's Maven wrapper (`mvnw`) by default. In an environment where the wrapper cannot download Maven (for example behind a corporate mirror), use a Maven that is already installed and, if needed, your own settings file:
+
+```bash
+export BENCH_MAVEN_MODE=system                    # wrapper (default) | system
+export BENCH_MAVEN_SETTINGS=$HOME/mirror-settings.xml   # optional, passed to Maven as -s
+./measure-runtime.sh 5
+```
+
+- `wrapper` runs `bash <module>/mvnw`. `system` runs `mvn` from `PATH` and fails with a clear message if it is missing.
+- `BENCH_MAVEN_SETTINGS` applies in both modes and must point to a readable file. Any other `BENCH_MAVEN_MODE` value is rejected.
+- Both `measure-runtime.sh` and `ci/build.sh` (used by the workflow) read the same variables. The `benchmark` workflow's manual run has matching `maven_mode` and `maven_settings` inputs; the settings path must exist on the runner.
+- Check the selection logic with `ci/test-maven.sh`.
+
 ## Continuous benchmarking (GitHub Actions)
 
 The `benchmark` workflow (`.github/workflows/benchmark.yml`, drivers in `ci/`) runs the startup benchmark on GitHub-hosted `ubuntu-24.04` runners. There is no schedule: it runs only when benchmarked code changes, or manually.
@@ -161,3 +176,4 @@ Ran on 04/29/2026 with Spring Boot 4.0.6, JDK 25, 10 iterations per configuratio
 | spring-boot-benchmark-all-aot-aot-caching | 3.603, 4.697, 4.0012 | 4.319, 5.508, 4.8076 |
 | spring-boot-benchmark-all-alpaquita | 12.591, 14.688, 13.5187 | 13.679, 15.786, 14.5517 |
 | spring-boot-benchmark-all-native | 0.34, 0.457, 0.3828 | 0.348, 0.465, 0.3904 |
+
