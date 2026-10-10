@@ -233,6 +233,18 @@ class ReportTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "head/plain/p06: 4 ok"):
             report.series(self.dir, module="tomcat", require_nonempty=True)
 
+    def test_strict_minimum_is_not_relaxed_by_a_short_run(self):
+        # bench.needed_samples() allows all-of-3 for a 3-start dispatch run; such a run is never
+        # published, and strict mode must still demand MIN_OK_SAMPLES.
+        import bench
+        res = good()
+        res["iterations"] = 3
+        res["samples"] = [s for s in res["samples"] if s["iteration"] < 3]
+        self.assertEqual(bench.insufficient_cells(res, res["cpu_profiles"]), [])
+        self.write(res)
+        with self.assertRaisesRegex(ValueError, "head/aot/p06: 3 ok"):
+            report.series(self.dir, module="tomcat", require_nonempty=True)
+
     def test_strict_requires_recorded_cpu_profiles(self):
         res = good()
         del res["cpu_profiles"]
