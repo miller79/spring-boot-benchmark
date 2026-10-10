@@ -2,12 +2,14 @@
 """Summaries and trend series from bench.py results (stdlib only).
 
   report.py summary <results-dir>   markdown for $GITHUB_STEP_SUMMARY
-  report.py series  <results-dir> [--module M]
+  report.py series  <results-dir> [--module M] [--kind ratio|absolute]
                                     customSmallerIsBetter JSON for github-action-benchmark;
                                     fails (exit 1) on any malformed or non-allowlisted result
 
-Only ratios are published: variant / `plain` of the same module, measured inside
-one job. Absolute milliseconds from shared runners are not comparable across runs.
+Two kinds of series, published as separate groups (the workflow gates only the ratio group):
+  ratio     variant / `plain` of the same module, measured inside one job. The trusted numbers.
+  absolute  median milliseconds per variant, `plain` included. For orientation only: shared
+            runners differ between runs, so compare absolutes within one run, not across runs.
 """
 import glob
 import json
@@ -196,7 +198,9 @@ def summary(results_dir):
     return "\n".join(out) if out else "No benchmark results found.\n"
 
 
-def series(results_dir, module=None):
+def series(results_dir, module=None, kind="ratio"):
+    if kind not in ("ratio", "absolute"):
+        raise ValueError(f"unknown series kind: {kind!r}")
     items = []
     loaded = load(results_dir, strict=True, module=module)
     if module and not loaded:
@@ -204,6 +208,21 @@ def series(results_dir, module=None):
     for res in loaded:
         for cp in dict.fromkeys(s["cpu_profile"] for s in res["samples"]):
             for p in dict.fromkeys(v["profile"] for v in res["variants"]):
+                if kind == "absolute":
+                    for metric, label in METRICS:
+                        vals = values(res["samples"], metric, cpu_profile=cp, side="head", profile=p)
+                        if len(vals) < 5:
+                            continue
+                        med = statistics.median(vals) * 1000
+                        if not math.isfinite(med) or med <= 0:
+                            raise ValueError(f"median out of range for {res['module']}/{p}/{cp}/{label}: {med}")
+                        items.append({
+                            "name": f"{res['module']} / {p} / {cp} / {label} median ms",
+                            "unit": "ms",
+                            "value": round(med, 1),
+                            "extra": f"n={len(vals)}, p95={percentile(vals, 0.95) * 1000:.1f} ms",
+                        })
+                    continue
                 if p == "plain":
                     continue
                 for metric, label in METRICS:
@@ -226,15 +245,19 @@ def series(results_dir, module=None):
 
 if __name__ == "__main__":
     args = sys.argv[1:]
-    if len(args) < 2 or args[0] not in ("summary", "series") or len(args) > (4 if args[0] == "series" else 2):
+    if len(args) < 2 or args[0] not in ("summary", "series"):
         sys.exit(__doc__)
     try:
         if args[0] == "summary":
+            if len(args) > 2:
+                sys.exit(__doc__)
             print(summary(args[1]))
         else:
-            only = args[3] if len(args) == 4 and args[2] == "--module" else None
-            if len(args) > 2 and only is None:
-                sys.exit(__doc__)
-            print(series(args[1], only))
+            opts, rest = {}, args[2:]
+            while rest:
+                if len(rest) < 2 or rest[0] not in ("--module", "--kind") or rest[0] in opts:
+                    sys.exit(__doc__)
+                opts[rest[0]], rest = rest[1], rest[2:]
+            print(series(args[1], opts.get("--module"), opts.get("--kind", "ratio")))
     except ValueError as e:
         sys.exit(f"invalid results: {e}")

@@ -196,7 +196,9 @@ jobs:
   # no `bench-ok` marker; its publish leg fails (the run goes red, so LAST_OK_SHA cannot advance) while
   # the other modules are still published. Each module is
   # its own series group (`name:`), so github-action-benchmark compares a module with that module's
-  # previous published run, and its alerts name the module.
+  # previous published run, and its alerts name the module. Absolute times go to a second group
+  # (`<name>-absolute`) on the same dashboard; only the ratio group alerts. The dashboard is the
+  # action's index.html at the root of `bench-data`, served by GitHub Pages (enabled in repo settings).
   publish:
     needs: [plan, bench]
     # Only trusted code on the default branch may write history or open issues.
@@ -246,6 +248,7 @@ jobs:
         if: steps.gate.outputs.ok == 'true'
         run: |
           python3 ci/report.py series results --module "$MODULE" > ratios.json
+          python3 ci/report.py series results --module "$MODULE" --kind absolute > absolute.json
           if [[ "$(jq length ratios.json)" -gt 0 ]]; then
             echo "has_series=true" >> "$GITHUB_OUTPUT"
           else
@@ -275,12 +278,31 @@ jobs:
           tool: customSmallerIsBetter
           output-file-path: ratios.json
           gh-pages-branch: bench-data
+          benchmark-data-dir-path: '.'
           github-token: ${{ github.token }}
           auto-push: true
           summary-always: true
           alert-threshold: '120%'
           comment-on-alert: true
           fail-on-alert: true
+      # Absolute medians in ms as their own series group, for visitors. No alert, comment or failure
+      # inputs: shared-runner absolutes are noisy and must never gate. A failed publish only warns.
+      - name: Publish absolute times (no alerting)
+        id: bench_abs
+        if: steps.series.outputs.has_series == 'true'
+        continue-on-error: true
+        uses: benchmark-action/github-action-benchmark@4322e5726e6334590d251fc4f92bec0efafc45dc # v1.22.2
+        with:
+          name: spring-boot-benchmark-${{ matrix.module }}-absolute
+          tool: customSmallerIsBetter
+          output-file-path: absolute.json
+          gh-pages-branch: bench-data
+          benchmark-data-dir-path: '.'
+          github-token: ${{ github.token }}
+          auto-push: true
+      - name: Warn if absolute times were not published
+        if: steps.bench_abs.outcome == 'failure'
+        run: echo "::warning::Absolute times for $MODULE were not published (ratio history is unaffected)"
       - name: Open or update the alert issue for this module
         if: steps.bench.outcome == 'failure'
         env:

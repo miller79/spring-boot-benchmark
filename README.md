@@ -11,6 +11,7 @@
     - [spring-boot-benchmark-all](#spring-boot-benchmark-all)
   - [Build and Measure Runtimes](#build-and-measure-runtimes)
   - [Continuous benchmarking (GitHub Actions)](#continuous-benchmarking-github-actions)
+    - [Benchmark dashboard](#benchmark-dashboard)
   - [Results](#results)
 
 ## Introduction
@@ -109,18 +110,28 @@ The `benchmark` workflow (`.github/workflows/benchmark.yml`, drivers in `ci/`) r
 | Trigger | What runs |
 |---|---|
 | `pull_request` (same-repo branches only, never forks) | Only modules whose `src/`, `pom.xml` or `.mvn/` changed (or all, if `spring-boot-benchmark-parent`, `ci/` or the workflow changed). Smoke: `plain` and `aot-cds`, 0.6 CPU, 10 starts, **merge result (`refs/pull/N/merge`) vs the PR base**; a module that is new in the PR runs head only. Results appear in the job summary; nothing is commented or published. With 10 starts the p95 column is only indicative. |
-| `push` to `main` (same path filters) | Full grid for every module changed since the **last successful push run** (not just since the previous commit): 8 profiles x 0.6/1.0/2.0 CPU x 30 starts. If that run is unknown, every module runs. Ratios of each module that benchmarked successfully are appended to the `bench-data` branch; a regression alert opens (or updates) one issue per module. |
+| `push` to `main` (same path filters) | Full grid for every module changed since the **last successful push run** (not just since the previous commit): 8 profiles x 0.6/1.0/2.0 CPU x 30 starts. If that run is unknown, every module runs. Ratios and absolute times of each module that benchmarked successfully are appended to the `bench-data` branch; a regression alert opens (or updates) one issue per module. |
 | `workflow_dispatch` | Choose modules, profiles, CPU profiles and iterations (profiles and CPU profiles must be known names, iterations 1-999, duplicates are removed). Never publishes. Tick `spike` to record disk headroom, cgroup/cpuset behaviour and run-to-run noise (3 repeats). |
 
 How to read the results:
 
 - Each module builds and benchmarks in its own job (one VM). Variants run interleaved in random order, pinned to cores 2-3 with `--cpus`/`--memory`. `p06` reproduces `measure-runtime.sh`.
-- **Trust ratios to `plain` inside one job. Do not trust absolute times**, compare numbers across runs, or compare with the table below (a different machine). Shared VMs are noisy; summaries show 95% bootstrap intervals.
+- **Trust ratios to `plain` inside one job. Treat absolute times as orientation only**: do not compare them across runs or with the table below (a different machine). Shared VMs are noisy; summaries show 95% bootstrap intervals.
 - The apps close themselves after startup, so "wall" is container start to exit, and "started" is Spring's own `Started Application in` line. "wall" includes the `docker start` latency (roughly constant), which pulls wall ratios of very fast variants such as `native` towards 1; prefer "started" for those. `cpu.stat` throttling and `memory.peak` are sampled while the container runs (a lower bound).
 - History lives on the `bench-data` branch (created automatically). Each module is its own series group (`spring-boot-benchmark-<module>`): a regression alert fires when a ratio worsens by more than 20% against **that module's previous published run, and only for series present in it**. There is no confidence-interval test, only the threshold, which is a starting value until the spike measures real noise.
-- Only ratios to `plain` are published, so a regression of `plain` itself (all other ratios improve) is **not detected**.
+- Only the ratio series raise alerts, so a regression of `plain` itself (all other ratios improve) is **not alerted**; it shows up in the absolute series on the dashboard, which nobody gets notified about.
 - Pushes that are queued behind a running benchmark can be cancelled by newer ones; no module is lost, because the next successful run covers everything changed since the last successful one. A module that failed or whose results artifact is missing is not published; its publish job fails, so the run is red and it is retried by the next push to `main`. A changed module directory unknown to `ci/plan.sh` also fails the plan instead of being skipped.
 - Benchmark jobs are not meant to be required checks. A failed or noisy run still shows a red check on the PR, but does not block merging unless someone makes it required (this includes Dependabot PRs). `github-actions` updates keep the pinned action SHAs current.
+
+### Benchmark dashboard
+
+Charts of the published history: **https://miller79.github.io/spring-boot-benchmark/** (served by GitHub Pages from the root of the `bench-data` branch; **Unverified**: the link works only after Pages is enabled for that branch and the first `main` run has published data).
+
+- **Latest results:** each chart ends at the newest point, one per full run on `main` for the module it covers. A module appears only after a push to `main` has benchmarked it, and it is updated only when its own code changes, so different modules can show different commit dates (hover a point for the commit).
+- **Ratio charts** (`<module> / <profile> / <cpu> / started|wall ratio to plain`, unit `ratio`): median of the variant divided by median of `plain` from the same job; below 1 is faster than `plain`. The tooltip carries the 95% bootstrap interval. These are the numbers to trust, and the only ones that alert (more than 20% worse than the previous published run).
+- **Absolute charts** (`spring-boot-benchmark-<module>-absolute`, `... median ms`, unit `ms`): median startup in milliseconds, `plain` included, for the same profiles and CPU limits. Shared runners differ from run to run, so use them to see order of magnitude and compare variants within one point, not to compare points over time. Nothing alerts on them.
+- **Smoke vs full:** pull requests run a smoke benchmark (`plain` and `aot-cds`, 0.6 CPU, 10 starts, head vs base) and show it only in the job summary. The dashboard holds only full runs (8 profiles, 3 CPU profiles, 30 starts) from pushes to `main`.
+- The raw data is `data.js` on the `bench-data` branch. That branch is written only by the workflow on `main`; do not edit it by hand.
 
 ## Results
 
@@ -176,4 +187,4 @@ Ran on 04/29/2026 with Spring Boot 4.0.6, JDK 25, 10 iterations per configuratio
 | spring-boot-benchmark-all-aot-aot-caching | 3.603, 4.697, 4.0012 | 4.319, 5.508, 4.8076 |
 | spring-boot-benchmark-all-alpaquita | 12.591, 14.688, 13.5187 | 13.679, 15.786, 14.5517 |
 | spring-boot-benchmark-all-native | 0.34, 0.457, 0.3828 | 0.348, 0.465, 0.3904 |
-
+
