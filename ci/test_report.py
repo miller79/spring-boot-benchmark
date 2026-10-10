@@ -22,6 +22,7 @@ def good(module="tomcat"):
                             "profile": profile, "started_s": base + i / 100, "wall_s": base + 0.5 + i / 100,
                             "nr_periods": 10, "nr_throttled": 1, "mem_peak_bytes": 1000})
     return {"schema": 1, "module": module, "iterations": 6, "repeats": 1, "cpuset": "2,3", "memory": "1g",
+            "cpu_profiles": ["p06"],
             "variants": [{"side": "head", "profile": "plain"}, {"side": "head", "profile": "aot"}],
             "samples": samples}
 
@@ -206,6 +207,39 @@ class ReportTests(unittest.TestCase):
         self.write(good())
         self.assertEqual(len(json.loads(report.series(self.dir, module="tomcat", require_nonempty=True))), 2)
 
+    def test_strict_rejects_one_deficient_variant_among_valid_ones(self):
+        res = good()
+        res["variants"].append({"side": "head", "profile": "cds"})
+        res["samples"] += [dict(s, profile="cds") for s in good()["samples"] if s["profile"] == "aot"]
+        for s in [s for s in res["samples"] if s["profile"] == "aot"][report.MIN_OK_SAMPLES - 1:]:
+            s["ok"] = False
+        self.write(res)
+        self.assertEqual(len(self.series()), 2)  # lenient mode silently drops the cell
+        with self.assertRaisesRegex(ValueError, "head/aot/p06: 4 ok"):
+            report.series(self.dir, module="tomcat", require_nonempty=True)
+
+    def test_strict_rejects_cpu_profile_without_samples(self):
+        res = good()
+        res["cpu_profiles"] = ["p06", "p10"]
+        self.write(res)
+        with self.assertRaisesRegex(ValueError, "p10: 0 ok"):
+            report.series(self.dir, module="tomcat", require_nonempty=True)
+
+    def test_strict_rejects_deficient_plain_denominator(self):
+        res = good()
+        for s in [s for s in res["samples"] if s["profile"] == "plain"][report.MIN_OK_SAMPLES - 1:]:
+            s["ok"] = False
+        self.write(res)
+        with self.assertRaisesRegex(ValueError, "head/plain/p06: 4 ok"):
+            report.series(self.dir, module="tomcat", require_nonempty=True)
+
+    def test_strict_requires_recorded_cpu_profiles(self):
+        res = good()
+        del res["cpu_profiles"]
+        self.write(res)
+        with self.assertRaisesRegex(ValueError, "no cpu_profiles"):
+            report.series(self.dir, module="tomcat", require_nonempty=True)
+
     def test_cli_require_nonempty_fails_on_empty_series(self):
         self.write(self._drop_ok(0))
         cmd = [sys.executable, os.path.join(HERE, "report.py"), "series", self.dir, "--module", "tomcat"]
@@ -214,7 +248,7 @@ class ReportTests(unittest.TestCase):
         p = subprocess.run(cmd + ["--require-nonempty"], capture_output=True, text=True)
         self.assertNotEqual(p.returncode, 0)
         self.assertEqual(p.stdout, "")
-        self.assertIn("empty ratio series", p.stderr)
+        self.assertIn("below", p.stderr)
 
     def test_cli_require_nonempty_rejected_for_summary(self):
         p = subprocess.run([sys.executable, os.path.join(HERE, "report.py"), "summary", self.dir, "--require-nonempty"],

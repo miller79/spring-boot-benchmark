@@ -44,6 +44,7 @@ def run(fake):
 
 
 def err(cmd, stderr="boom"):
+    # sh() uses text=True (str stderr); docker wait does not (pass bytes)
     return subprocess.CalledProcessError(1, cmd, stderr=stderr)
 
 
@@ -56,7 +57,7 @@ class RunOnceTests(unittest.TestCase):
         self.assertEqual(fake.calls[-1], "rm")
 
     def test_wait_error_is_not_ok_with_reason(self):
-        fake = FakeDocker(fail={"wait": err("wait", "daemon gone")})
+        fake = FakeDocker(fail={"wait": err("wait", b"daemon gone")})
         rec = run(fake)
         self.assertFalse(rec["ok"])
         self.assertIn("docker wait failed: daemon gone", rec["log_tail"][0])
@@ -194,6 +195,32 @@ class CmdRunTests(unittest.TestCase):
     def test_run_fails_when_a_cell_is_empty(self):
         with self.assertRaises(SystemExit):
             self.run_cmd(lambda p, n: p == "plain")
+
+
+class RealSubprocessTests(unittest.TestCase):
+    """No mocks: a stub `docker` executable on PATH, so the exception types are the real ones."""
+
+    def run_with_stub(self, wait_rc):
+        with tempfile.TemporaryDirectory() as d:
+            stub = os.path.join(d, "docker")
+            with open(stub, "w") as f:
+                f.write('#!/bin/sh\ncase "$1" in\n'
+                        '  create) echo cid1;;\n'
+                        '  wait) echo "daemon went away" >&2; exit %d;;\n'
+                        '  inspect) echo "0 false";;\n'
+                        '  logs) echo "Started Application in 1.5 seconds";;\n'
+                        'esac\n' % wait_rc)
+            os.chmod(stub, 0o755)
+            with mock.patch.dict(os.environ, {"PATH": d + os.pathsep + os.environ["PATH"]}):
+                return bench.run_once("img", "0.6", "", None, 5)
+
+    def test_real_wait_failure_is_not_ok_with_reason(self):
+        rec = self.run_with_stub(1)
+        self.assertFalse(rec["ok"])
+        self.assertIn("docker wait failed: daemon went away", rec["log_tail"][0])
+
+    def test_err_text_decodes_bytes(self):
+        self.assertEqual(bench._err_text(err("x", b"caf\xc3\xa9 \xff")), "caf\u00e9 \ufffd")
 
 
 if __name__ == "__main__":

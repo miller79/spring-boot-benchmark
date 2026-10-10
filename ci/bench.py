@@ -55,7 +55,10 @@ def sh(args, **kw):
 
 
 def _err_text(e):
-    return (getattr(e, "stderr", None) or str(e) or type(e).__name__).strip()[-300:]
+    err = getattr(e, "stderr", None)
+    if isinstance(err, bytes):  # subprocess.run without text=True hands back bytes
+        err = err.decode(errors="replace")
+    return (err or str(e) or type(e).__name__).strip()[-300:]
 
 
 def try_out(args, stream="stdout"):
@@ -235,6 +238,7 @@ def cmd_run(args):
         "repeats": args.repeats, "seed": args.seed, "memory": "1g",
         "harness_affinity": sorted(os.sched_getaffinity(0)) if hasattr(os, "sched_getaffinity") else None,
         "variants": variants, "samples": [],
+        "cpu_profiles": [c for c in args.cpu_profiles.split(",") if c],
         "started_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
     }
     os.makedirs(args.out, exist_ok=True)
@@ -276,9 +280,10 @@ def needed_samples(iterations, repeats):
     return min(MIN_OK_SAMPLES, iterations * repeats)
 
 
-def insufficient_cells(result, cpu_profiles):
-    """Describe every variant/cpu_profile cell with fewer ok samples than needed_samples() (empty list: all good)."""
-    need = needed_samples(result["iterations"], result["repeats"])
+def insufficient_cells(result, cpu_profiles, need=None):
+    """Describe every variant/cpu_profile cell with fewer ok samples than needed (default needed_samples(); empty list: all good)."""
+    if need is None:
+        need = needed_samples(result["iterations"], result["repeats"])
     bad = []
     for cp in [c for c in cpu_profiles if c]:
         for v in result["variants"]:

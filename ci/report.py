@@ -18,7 +18,7 @@ import random
 import statistics
 import sys
 
-from bench import CPU_PROFILES, MIN_OK_SAMPLES, MODULES, PROFILES
+from bench import CPU_PROFILES, MIN_OK_SAMPLES, MODULES, PROFILES, insufficient_cells
 
 BOOTSTRAPS = 2000
 MAX_FILE_BYTES = 20 * 1024 * 1024
@@ -203,6 +203,12 @@ def series(results_dir, module=None, require_nonempty=False):
     if module and not loaded:
         raise ValueError(f"no results-{module}.json found under {results_dir}")
     for res in loaded:
+        if require_nonempty:  # strict (publish) mode: the expected grid comes from the producer, not from the surviving samples
+            if not res.get("cpu_profiles"):
+                raise ValueError(f"{res['module']}: no cpu_profiles recorded, cannot check completeness")
+            bad = insufficient_cells(res, res["cpu_profiles"], need=MIN_OK_SAMPLES)
+            if bad:
+                raise ValueError(f"{res['module']}: cells below {MIN_OK_SAMPLES} ok samples: " + "; ".join(bad))
         for cp in dict.fromkeys(s["cpu_profile"] for s in res["samples"]):
             for p in dict.fromkeys(v["profile"] for v in res["variants"]):
                 if p == "plain":
