@@ -9,6 +9,11 @@ import unittest
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 DEFAULT_REF = "github.ref == format('refs/heads/{0}', github.event.repository.default_branch)"
+PUBLISH_GUARD = ("!cancelled() && github.event_name == 'push' && " + DEFAULT_REF +
+                 " && needs.plan.outputs.mode == 'full' && needs.bench.result != 'skipped'")
+PAGES_GUARD = ("(github.event_name == 'workflow_dispatch' && " + DEFAULT_REF + ") || "
+               "(github.event_name == 'workflow_run' && github.event.workflow_run.event == 'push' && "
+               "github.event.workflow_run.head_branch == github.event.repository.default_branch)")
 
 
 def read(name):
@@ -37,13 +42,32 @@ def guard(body):
     return m.group(1) if m else ""
 
 
+def check_pinned(name, text):
+    return [f"{name}: unpinned action {m}" for m in re.findall(r"(?m)^\s*(?:- )?uses: (\S+)", text)
+            if not re.fullmatch(r"[\w.-]+/[\w./-]+@[0-9a-f]{40}", m)]
+
+
+def check_checkouts(name, text):
+    n_checkout = len(re.findall(r"uses: actions/checkout@", text))
+    n_safe = len(re.findall(r"persist-credentials: false", text))
+    return [] if n_checkout and n_checkout == n_safe else [f"{name}: every checkout needs persist-credentials: false"]
+
+
+def check_data_file(text):
+    """`landed` reads DATA_FILE; it must be where the action writes: <benchmark-data-dir-path>/data.js."""
+    publish = job(text, "publish")
+    m = re.search(r"benchmark-data-dir-path: '([^']*)'", step(publish, "Publish history"))
+    want = "data.js" if m and m.group(1) == "." else f"{m.group(1) if m else 'dev/bench'}/data.js"
+    got = re.search(r"DATA_FILE: (\S+)", step(publish, "Verify the history push landed"))
+    return [] if got and got.group(1) == want else [f"landed DATA_FILE {got and got.group(1)!r} != {want!r}"]
+
+
 def check_benchmark(text):
     problems = []
     publish = job(text, "publish")
-    g = guard(publish)
-    for clause in ("github.event_name == 'push'", DEFAULT_REF, "needs.plan.outputs.mode == 'full'"):
-        if clause not in g:
-            problems.append(f"publish guard lost: {clause}")
+    if " ".join(guard(publish).split()) != PUBLISH_GUARD:  # exact: a flipped && or a dropped clause is caught
+        problems.append("publish guard changed")
+    problems += check_data_file(text)
     if not re.search(r"(?m)^permissions:\n  contents: read\n", text):
         problems.append("workflow-level permissions must be contents: read")
     for name in ("plan", "bench"):
@@ -94,12 +118,12 @@ def check_pages(text):
     if re.search(r"(?m)^  (push|pull_request|pull_request_target|schedule):", text):
         problems.append("no push/pull_request/schedule trigger allowed")
     deploy = job(text, "deploy")
-    g = guard(deploy)
-    for clause in ("github.event_name == 'workflow_dispatch'", DEFAULT_REF, "github.event_name == 'workflow_run'",
-                   "github.event.workflow_run.event == 'push'",
-                   "github.event.workflow_run.head_branch == github.event.repository.default_branch"):
-        if clause not in g:
-            problems.append(f"deploy guard lost: {clause}")
+    if " ".join(guard(deploy).split()) != PAGES_GUARD:
+        problems.append("deploy guard changed")
+    if not re.search(r"(?m)^    concurrency:\n      group: pages\n      cancel-in-progress: false\n", deploy):
+        problems.append("deploy must serialise on concurrency group pages without cancelling")
+    problems += check_checkouts("pages.yml", text)
+    problems += check_pinned("pages.yml", text)
     if len(re.findall(r"(?m)^\s+pages: write$", text)) != 1 or len(re.findall(r"(?m)^\s+id-token: write$", text)) != 1 \
             or "pages: write" not in deploy or "id-token: write" not in deploy:
         problems.append("pages: write and id-token: write exactly once, on the deploy job")
@@ -114,8 +138,11 @@ def check_pages(text):
     if "always()" in text or "continue-on-error" in text:
         problems.append("no always() or continue-on-error in pages.yml")
     stage = step(deploy, "Stage the allowlisted site files")
-    if "for f in index.html data.js; do" not in stage or "cp -r" in stage or "cp -R" in stage:
-        problems.append("staging must copy exactly index.html and data.js")
+    if "run: bash ci/stage-pages.sh site _site" not in stage or "if: steps.probe.outputs.present == 'true'" not in stage:
+        problems.append("staging must run ci/stage-pages.sh (non-empty, no symlinks, two files) when bench-data exists")
+    order = [deploy.find(x) for x in ("path: site", "Stage the allowlisted", "upload-pages-artifact", "deploy-pages")]
+    if -1 in order or order != sorted(order):
+        problems.append("order must be checkout bench-data, stage, upload, deploy")
     return problems
 
 
@@ -152,6 +179,9 @@ class WorkflowTests(unittest.TestCase):
         for old, new in (
                 ("github.event_name == 'push' &&", "true &&"),
                 ("needs.plan.outputs.mode == 'full' &&", "true &&"),
+                ("github.event_name == 'push' &&", "github.event_name == 'push' ||"),
+                ("!cancelled() &&", "!cancelled() ||"),
+                ("DATA_FILE: data.js", "DATA_FILE: dev/bench/data.js"),
                 ("      issues: write\n", "      issues: write\n      pages: write\n"),
                 ("run: bash ci/landed.sh", "run: echo skipped"),
                 ("          BEFORE_SHA: ${{ steps.before.outputs.sha }}\n", ""),
@@ -173,11 +203,35 @@ class WorkflowTests(unittest.TestCase):
                 ("  workflow_dispatch:\n", "  workflow_dispatch:\n  push:\n"),
                 ("      contents: read\n      pages: write", "      contents: write\n      pages: write"),
                 ("          path: _site", "          path: site"),
-                ("for f in index.html data.js; do", "for f in index.html data.js README.md; do cp -r site/. _site/; done; for f in x; do"),
+                ("run: bash ci/stage-pages.sh site _site", "run: cp -r site _site"),
+                ("      group: pages\n      cancel-in-progress: false", "      group: pages\n      cancel-in-progress: true"),
+                ("      group: pages\n", "      group: other\n"),
+                ("          persist-credentials: false\n      - name: Check", "      - name: Check"),
+                ("actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346", "actions/deploy-pages@v5"),
+                ("github.event.workflow_run.event == 'push' &&", "github.event.workflow_run.event == 'push' ||"),
+                ("(github.event_name == 'workflow_run' &&", "(github.event_name == 'workflow_run' ||"),
+                ("default_branch)) ||", "default_branch)) &&"),
                 ("run: bash ci/pages-probe.sh", "run: gh api repos/x --silent || true"),
                 ("      name: github-pages", "      name: other")):
             with self.subTest(old=old):
                 self.assertNotEqual(check_pages(self.mutate(self.pages, old, new)), [])
+
+    def test_all_actions_pinned_and_checkouts_keep_no_credentials(self):
+        names = sorted(n for n in os.listdir(os.path.join(ROOT, ".github", "workflows")) if n.endswith(".yml"))
+        for n in names:
+            self.assertEqual(check_pinned(n, read(n)), [], n)
+        for n in ("pages.yml", "ci-tests.yml"):
+            self.assertEqual(check_checkouts(n, read(n)), [], n)
+        self.assertNotEqual(check_pinned("x", "      - uses: actions/checkout@v4\n"), [])
+        self.assertNotEqual(check_pinned("x", "        uses: a/b@3d3c42e\n"), [])
+        self.assertNotEqual(check_checkouts("x", "uses: actions/checkout@" + "a" * 40 + "\n"), [])
+
+    def test_ci_tests_is_read_only(self):
+        text = read("ci-tests.yml")
+        self.assertRegex(text, r"(?m)^permissions:\n  contents: read\n")
+        self.assertNotRegex(text, r"(?m)^\s+[a-z-]+: write")
+        self.assertNotIn("secrets.", text)
+        self.assertIn("command -v shellcheck", text)
 
     def test_pages_scopes_only_in_pages_workflow(self):
         self.assertNotEqual(check_benchmark(self.mutate(

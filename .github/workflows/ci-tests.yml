@@ -43,7 +43,7 @@ jobs:
           done
       - name: Shell tests
         run: |
-          for t in ci/test-plan.sh ci/test-maven.sh ci/test-clean-docker.sh ci/test-landed.sh ci/test-pages-probe.sh; do
+          for t in ci/test-plan.sh ci/test-maven.sh ci/test-clean-docker.sh ci/test-landed.sh ci/test-pages-probe.sh ci/test-stage-pages.sh; do
             echo "::group::$t"
             bash "$t"
             echo "::endgroup::"
