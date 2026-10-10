@@ -44,7 +44,12 @@ select_modules() {
         hit[$m]=1 ;;
     esac
   done
-  for m in "${ALL_MODULES[@]}"; do [[ -n "${hit[$m]:-}" ]] && echo "$m"; done
+  for m in "${ALL_MODULES[@]}"; do
+    [[ -n "${hit[$m]:-}" ]] && echo "$m"
+    unset "hit[$m]"
+  done
+  # Anything left is a module directory that is not benchmarked; the check below fails on it.
+  for m in "${!hit[@]}"; do echo "$m"; done
   return 0
 }
 
@@ -87,7 +92,7 @@ case "${EVENT_NAME:?}" in
 esac
 
 for m in "${modules[@]}"; do
-  [[ " ${ALL_MODULES[*]} " == *" $m "* ]] || { echo "unknown module: $m" >&2; exit 1; }
+  [[ " ${ALL_MODULES[*]} " == *" $m "* ]] || { echo "unknown module: $m (add it to ALL_MODULES in ci/plan.sh, MODULES in ci/bench.py and the allowlist in ci/report.py)" >&2; exit 1; }
 done
 
 json="["

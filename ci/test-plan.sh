@@ -53,5 +53,10 @@ run "push unset sha -> all"     0 'running every module' EVENT_NAME=push
 run "pr smoke"                  0 'mode=smoke modules=\["tomcat","activemq"\]' EVENT_NAME=pull_request BASE_SHA="$c0"
 run "unsupported event"         1 'unsupported event' EVENT_NAME=schedule
 
+# a changed module directory that plan.sh does not know must fail, not be dropped (HEAD moves here)
+c4=$(commit spring-boot-benchmark-foo/src/A.java)
+run "push unknown module dir"   1 'unknown module: foo' EVENT_NAME=push LAST_OK_SHA="$c3"
+run "pr unknown module dir"     1 'unknown module: foo' EVENT_NAME=pull_request BASE_SHA="$c3"
+
 echo
 if [[ $fails -eq 0 ]]; then echo "all plan scenarios passed"; else echo "$fails scenario(s) failed"; exit 1; fi
