@@ -6,6 +6,9 @@ import re
 import unittest
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
+PUBLISH_GUARD = ("!cancelled() && github.event_name == 'push' && "
+                 "github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && "
+                 "needs.plan.outputs.mode == 'full' && needs.bench.result != 'skipped'")
 
 
 def read(name):
@@ -31,10 +34,60 @@ def step(body, prefix):
     return found[0]
 
 
+def guard(body):
+    m = re.search(r"^    if: >-\n(.*?)(?=^    [a-z-]+:)", body, re.S | re.M)
+    return " ".join(m.group(1).split()) if m else ""
+
+
+def check_publish_guard(publish):
+    """Exact (whitespace-normalised) guard: an && flipped to || or a dropped clause is caught."""
+    return [] if guard(publish) == PUBLISH_GUARD else [f"publish guard changed: {guard(publish)!r}"]
+
+
+def check_data_file(text):
+    """`landed` reads DATA_FILE; it must be where the action writes: <benchmark-data-dir-path>/data.js."""
+    publish = job(text, "publish")
+    action = step(publish, "Publish history")
+    m = re.search(r"benchmark-data-dir-path: '([^']*)'", action)
+    want = "data.js" if m and m.group(1) == "." else f"{m.group(1) if m else 'dev/bench'}/data.js"
+    got = re.search(r"DATA_FILE: (\S+)", step(publish, "Verify the history push landed"))
+    return [] if got and got.group(1) == want else [f"landed DATA_FILE {got and got.group(1)!r} != {want!r}"]
+
+
+def check_pinned(name, text):
+    return [f"{name}: unpinned action {m}" for m in re.findall(r"(?m)^\s*(?:- )?uses: (\S+)", text)
+            if not re.fullmatch(r"[\w.-]+/[\w./-]+@[0-9a-f]{40}", m)]
+
+
 class BenchmarkWorkflowTests(unittest.TestCase):
     def setUp(self):
         self.text = read("benchmark.yml")
         self.publish = job(self.text, "publish")
+
+    def test_publish_guard_is_exact_and_flips_are_caught(self):
+        self.assertEqual(check_publish_guard(self.publish), [])
+        for old, new in (("github.event_name == 'push' &&", "github.event_name == 'push' ||"),
+                         ("needs.plan.outputs.mode == 'full' &&", "needs.plan.outputs.mode == 'full' ||"),
+                         ("!cancelled() &&", "!cancelled() ||"),
+                         ("needs.bench.result != 'skipped'", "true")):
+            with self.subTest(old=old):
+                self.assertIn(old, self.publish)
+                self.assertNotEqual(check_publish_guard(self.publish.replace(old, new, 1)), [])
+
+    def test_landed_reads_the_file_the_action_writes(self):
+        self.assertEqual(check_data_file(self.text), [])
+        self.assertNotEqual(check_data_file(self.text.replace("DATA_FILE: dev/bench/data.js", "DATA_FILE: data.js")), [])
+        with_dir = self.text.replace("          gh-pages-branch: bench-data\n", "          gh-pages-branch: bench-data\n          benchmark-data-dir-path: '.'\n", 1)
+        self.assertNotEqual(check_data_file(with_dir), [])  # dir changed, DATA_FILE not
+        self.assertEqual(check_data_file(with_dir.replace("DATA_FILE: dev/bench/data.js", "DATA_FILE: data.js")), [])
+
+    def test_all_actions_are_pinned_to_a_full_sha(self):
+        names = sorted(n for n in os.listdir(os.path.join(ROOT, ".github", "workflows")) if n.endswith(".yml"))
+        self.assertIn("benchmark.yml", names)
+        for n in names:
+            self.assertEqual(check_pinned(n, read(n)), [])
+        self.assertNotEqual(check_pinned("x", "      - uses: actions/checkout@v4\n"), [])
+        self.assertNotEqual(check_pinned("x", "        uses: a/b@3d3c42e\n"), [])
 
     def test_publish_guard_keeps_its_clauses(self):
         guard = self.publish.split("if: >-", 1)[1].split("name:", 1)[0]

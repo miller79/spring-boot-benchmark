@@ -53,6 +53,8 @@ jobs:
           ACTIONLINT_VERSION: 1.7.12
           ACTIONLINT_SHA256: 8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8
         run: |
+          # actionlint only lints `run:` scripts when shellcheck is on PATH; do not let that lapse silently.
+          command -v shellcheck
           tgz="actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
           curl -fsSL -o "$RUNNER_TEMP/$tgz" "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/$tgz"
           echo "$ACTIONLINT_SHA256  $RUNNER_TEMP/$tgz" | sha256sum -c -

@@ -171,7 +171,7 @@ jobs:
         env:
           HAS_BASE: ${{ steps.base.outputs.has_base }}
         run: |
-          sides=head
+          sides="head"
           if [[ "$MODE" == "smoke" && "$HAS_BASE" == "true" ]]; then sides=head,base; fi
           python3 ci/bench.py run --module "$MODULE" --profiles "$PROFILES" --sides "$sides" \
             --cpu-profiles "$CPU_PROFILES" --iterations "$ITERATIONS" --repeats "$REPEATS" \
