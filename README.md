@@ -10,6 +10,7 @@
     - [spring-boot-benchmark-activemq](#spring-boot-benchmark-activemq)
     - [spring-boot-benchmark-all](#spring-boot-benchmark-all)
   - [Build and Measure Runtimes](#build-and-measure-runtimes)
+  - [Continuous benchmarking (GitHub Actions)](#continuous-benchmarking-github-actions)
   - [Results](#results)
 
 ## Introduction
@@ -85,6 +86,24 @@ Once the application is built, the script will run the application ten times (by
 - --cpus=".6"
 - --memory=1g
 - -e="JAVA_TOOL_OPTIONS=-XX:ActiveProcessorCount=1"
+
+## Continuous benchmarking (GitHub Actions)
+
+The `benchmark` workflow (`.github/workflows/benchmark.yml`, drivers in `ci/`) runs the startup benchmark on GitHub-hosted `ubuntu-24.04` runners. There is no schedule: it runs only when benchmarked code changes, or manually.
+
+| Trigger | What runs |
+|---|---|
+| `pull_request` (same-repo branches only, never forks) | Only modules whose `src/`, `pom.xml` or `.mvn/` changed (or all, if `spring-boot-benchmark-parent`, `ci/` or the workflow changed). Smoke: `plain` and `aot-cds`, 0.6 CPU, 10 starts, **head vs PR base**. Results appear in the job summary; nothing is commented or published. |
+| `push` to `main` (same path filters) | Full grid for the changed modules: 8 profiles x 0.6/1.0/2.0 CPU x 30 starts. Ratios are appended to the `bench-data` branch; a regression alert opens an issue. |
+| `workflow_dispatch` | Choose modules, profiles, CPU profiles and iterations. Never publishes. Tick `spike` to record disk headroom, cgroup/cpuset behaviour and run-to-run noise (3 repeats). |
+
+How to read the results:
+
+- Each module builds and benchmarks in its own job (one VM). Variants run interleaved in random order, pinned to cores 2-3 with `--cpus`/`--memory`. `p06` reproduces `measure-runtime.sh`.
+- **Trust ratios to `plain` inside one job. Do not trust absolute times**, compare numbers across runs, or compare with the table below (a different machine). Shared VMs are noisy; summaries show 95% bootstrap intervals.
+- The apps close themselves after startup, so "wall" is container start to exit, and "started" is Spring's own `Started Application in` line. `cpu.stat` throttling and `memory.peak` are sampled while the container runs (a lower bound).
+- History lives on the `bench-data` branch (created automatically); alerts trigger when a ratio worsens by more than 20% against the previous run. This threshold is a starting value until the spike measures real noise.
+- Benchmark jobs are not meant to be required checks, so a noisy or failed run only warns (this includes Dependabot PRs). `github-actions` updates keep the pinned action SHAs current.
 
 ## Results
 
