@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791678144599,
+  "lastUpdate": 1791678158832,
   "repoUrl": "https://github.com/miller79/spring-boot-benchmark",
   "entries": {
     "spring-boot-benchmark-original": [
@@ -1276,6 +1276,326 @@ window.BENCHMARK_DATA = {
             "name": "data-rest / native / p20 / wall ratio to plain",
             "value": 0.0663,
             "range": "[0.064, 0.069]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          }
+        ]
+      }
+    ],
+    "spring-boot-benchmark-activemq": [
+      {
+        "commit": {
+          "author": {
+            "email": "anthony.lofton@jbhunt.com",
+            "name": "Anthony Lofton",
+            "username": "miller79"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a5e681bd364d16d16c89b168f53c2cb45fe5f617",
+          "message": "Merge pull request #129 from miller79/lofton/ENG-010-benchmark-ci\n\nENG-010: benchmark GitHub Actions workflow",
+          "timestamp": "2026-10-10T17:11:28-05:00",
+          "tree_id": "48dc828817e23503b6972efed1a937b08f735d92",
+          "url": "https://github.com/miller79/spring-boot-benchmark/commit/a5e681bd364d16d16c89b168f53c2cb45fe5f617"
+        },
+        "date": 1791678158078,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "activemq / aot / p06 / started ratio to plain",
+            "value": 0.7931,
+            "range": "[0.782, 0.814]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "activemq / aot / p06 / wall ratio to plain",
+            "value": 0.836,
+            "range": "[0.823, 0.848]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "activemq / cds / p06 / started ratio to plain",
+            "value": 0.516,
+            "range": "[0.506, 0.528]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "activemq / cds / p06 / wall ratio to plain",
+            "value": 0.5565,
+            "range": "[0.545, 0.566]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "activemq / aot-cds / p06 / started ratio to plain",
+            "value": 0.3686,
+            "range": "[0.359, 0.377]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "activemq / aot-cds / p06 / wall ratio to plain",
+            "value": 0.4322,
+            "range": "[0.423, 0.440]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "activemq / aot-caching / p06 / started ratio to plain",
+            "value": 0.5155,
+            "range": "[0.506, 0.526]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "activemq / aot-caching / p06 / wall ratio to plain",
+            "value": 0.5492,
+            "range": "[0.542, 0.561]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "activemq / aot-aot-caching / p06 / started ratio to plain",
+            "value": 0.36,
+            "range": "[0.354, 0.370]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "activemq / aot-aot-caching / p06 / wall ratio to plain",
+            "value": 0.4308,
+            "range": "[0.423, 0.437]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "activemq / alpaquita / p06 / started ratio to plain",
+            "value": 0.9867,
+            "range": "[0.973, 1.007]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "activemq / alpaquita / p06 / wall ratio to plain",
+            "value": 1.0081,
+            "range": "[0.994, 1.020]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "activemq / native / p06 / started ratio to plain",
+            "value": 0.013,
+            "range": "[0.013, 0.014]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "activemq / native / p06 / wall ratio to plain",
+            "value": 0.0269,
+            "range": "[0.026, 0.027]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "activemq / aot / p10 / started ratio to plain",
+            "value": 0.7969,
+            "range": "[0.776, 0.812]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "activemq / aot / p10 / wall ratio to plain",
+            "value": 0.8298,
+            "range": "[0.817, 0.846]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "activemq / cds / p10 / started ratio to plain",
+            "value": 0.5082,
+            "range": "[0.496, 0.516]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "activemq / cds / p10 / wall ratio to plain",
+            "value": 0.5479,
+            "range": "[0.538, 0.557]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "activemq / aot-cds / p10 / started ratio to plain",
+            "value": 0.3604,
+            "range": "[0.351, 0.368]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "activemq / aot-cds / p10 / wall ratio to plain",
+            "value": 0.4301,
+            "range": "[0.419, 0.437]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "activemq / aot-caching / p10 / started ratio to plain",
+            "value": 0.5111,
+            "range": "[0.498, 0.524]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "activemq / aot-caching / p10 / wall ratio to plain",
+            "value": 0.5554,
+            "range": "[0.543, 0.563]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "activemq / aot-aot-caching / p10 / started ratio to plain",
+            "value": 0.3575,
+            "range": "[0.348, 0.370]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "activemq / aot-aot-caching / p10 / wall ratio to plain",
+            "value": 0.4278,
+            "range": "[0.418, 0.436]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "activemq / alpaquita / p10 / started ratio to plain",
+            "value": 0.9961,
+            "range": "[0.971, 1.009]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "activemq / alpaquita / p10 / wall ratio to plain",
+            "value": 1.0047,
+            "range": "[0.993, 1.022]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "activemq / native / p10 / started ratio to plain",
+            "value": 0.0161,
+            "range": "[0.015, 0.017]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "activemq / native / p10 / wall ratio to plain",
+            "value": 0.0383,
+            "range": "[0.037, 0.039]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "activemq / aot / p20 / started ratio to plain",
+            "value": 0.802,
+            "range": "[0.787, 0.810]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "activemq / aot / p20 / wall ratio to plain",
+            "value": 0.8454,
+            "range": "[0.836, 0.852]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "activemq / cds / p20 / started ratio to plain",
+            "value": 0.5101,
+            "range": "[0.503, 0.518]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "activemq / cds / p20 / wall ratio to plain",
+            "value": 0.5676,
+            "range": "[0.562, 0.574]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "activemq / aot-cds / p20 / started ratio to plain",
+            "value": 0.356,
+            "range": "[0.348, 0.363]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "activemq / aot-cds / p20 / wall ratio to plain",
+            "value": 0.4543,
+            "range": "[0.448, 0.457]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "activemq / aot-caching / p20 / started ratio to plain",
+            "value": 0.5079,
+            "range": "[0.502, 0.518]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "activemq / aot-caching / p20 / wall ratio to plain",
+            "value": 0.5686,
+            "range": "[0.563, 0.575]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "activemq / aot-aot-caching / p20 / started ratio to plain",
+            "value": 0.3591,
+            "range": "[0.353, 0.366]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "activemq / aot-aot-caching / p20 / wall ratio to plain",
+            "value": 0.4542,
+            "range": "[0.444, 0.457]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "activemq / alpaquita / p20 / started ratio to plain",
+            "value": 0.9823,
+            "range": "[0.966, 0.993]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "activemq / alpaquita / p20 / wall ratio to plain",
+            "value": 1.0094,
+            "range": "[0.998, 1.017]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "activemq / native / p20 / started ratio to plain",
+            "value": 0.0316,
+            "range": "[0.030, 0.034]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "activemq / native / p20 / wall ratio to plain",
+            "value": 0.0719,
+            "range": "[0.071, 0.073]",
             "unit": "ratio",
             "extra": "n=30 vs plain n=30"
           }
