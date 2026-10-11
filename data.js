@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791685269620,
+  "lastUpdate": 1791685271862,
   "repoUrl": "https://github.com/miller79/spring-boot-benchmark",
   "entries": {
     "spring-boot-benchmark-original": [
@@ -2854,6 +2854,320 @@ window.BENCHMARK_DATA = {
             "range": "[0.073, 0.077]",
             "unit": "ratio",
             "extra": "n=30 vs plain n=30"
+          }
+        ]
+      }
+    ],
+    "spring-boot-benchmark-activemq-absolute": [
+      {
+        "commit": {
+          "author": {
+            "email": "anthony.lofton@jbhunt.com",
+            "name": "Anthony Lofton",
+            "username": "miller79"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "669456915f73954b49771229bb37d596613b3b66",
+          "message": "Merge pull request #139 from miller79/lofton/ENG-010-benchmark-ci\n\nENG-016: benchmark dashboard (absolute times + GitHub Pages)",
+          "timestamp": "2026-10-10T18:36:37-05:00",
+          "tree_id": "55cff795ca14fa53e3b9bf607190b9e0a853a734",
+          "url": "https://github.com/miller79/spring-boot-benchmark/commit/669456915f73954b49771229bb37d596613b3b66"
+        },
+        "date": 1791685271493,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "activemq / plain / p06 / started median ms",
+            "value": 9260.5,
+            "unit": "ms",
+            "extra": "n=30, p95=9685.7 ms"
+          },
+          {
+            "name": "activemq / plain / p06 / wall median ms",
+            "value": 11087,
+            "unit": "ms",
+            "extra": "n=30, p95=11498.2 ms"
+          },
+          {
+            "name": "activemq / aot / p06 / started median ms",
+            "value": 7405,
+            "unit": "ms",
+            "extra": "n=30, p95=7708.1 ms"
+          },
+          {
+            "name": "activemq / aot / p06 / wall median ms",
+            "value": 9223.4,
+            "unit": "ms",
+            "extra": "n=30, p95=9520.1 ms"
+          },
+          {
+            "name": "activemq / cds / p06 / started median ms",
+            "value": 4557,
+            "unit": "ms",
+            "extra": "n=30, p95=4799.9 ms"
+          },
+          {
+            "name": "activemq / cds / p06 / wall median ms",
+            "value": 5862.4,
+            "unit": "ms",
+            "extra": "n=30, p95=6142.7 ms"
+          },
+          {
+            "name": "activemq / aot-cds / p06 / started median ms",
+            "value": 3120.5,
+            "unit": "ms",
+            "extra": "n=30, p95=3400.0 ms"
+          },
+          {
+            "name": "activemq / aot-cds / p06 / wall median ms",
+            "value": 4457.7,
+            "unit": "ms",
+            "extra": "n=30, p95=4750.3 ms"
+          },
+          {
+            "name": "activemq / aot-caching / p06 / started median ms",
+            "value": 4602,
+            "unit": "ms",
+            "extra": "n=30, p95=4949.5 ms"
+          },
+          {
+            "name": "activemq / aot-caching / p06 / wall median ms",
+            "value": 5901.8,
+            "unit": "ms",
+            "extra": "n=30, p95=6235.8 ms"
+          },
+          {
+            "name": "activemq / aot-aot-caching / p06 / started median ms",
+            "value": 3206,
+            "unit": "ms",
+            "extra": "n=30, p95=3445.2 ms"
+          },
+          {
+            "name": "activemq / aot-aot-caching / p06 / wall median ms",
+            "value": 4471,
+            "unit": "ms",
+            "extra": "n=30, p95=4768.3 ms"
+          },
+          {
+            "name": "activemq / alpaquita / p06 / started median ms",
+            "value": 9203.5,
+            "unit": "ms",
+            "extra": "n=30, p95=9513.5 ms"
+          },
+          {
+            "name": "activemq / alpaquita / p06 / wall median ms",
+            "value": 11202.4,
+            "unit": "ms",
+            "extra": "n=30, p95=11538.4 ms"
+          },
+          {
+            "name": "activemq / native / p06 / started median ms",
+            "value": 110.5,
+            "unit": "ms",
+            "extra": "n=30, p95=136.6 ms"
+          },
+          {
+            "name": "activemq / native / p06 / wall median ms",
+            "value": 298.6,
+            "unit": "ms",
+            "extra": "n=30, p95=316.5 ms"
+          },
+          {
+            "name": "activemq / plain / p10 / started median ms",
+            "value": 5700,
+            "unit": "ms",
+            "extra": "n=30, p95=5951.9 ms"
+          },
+          {
+            "name": "activemq / plain / p10 / wall median ms",
+            "value": 6842.9,
+            "unit": "ms",
+            "extra": "n=30, p95=7203.2 ms"
+          },
+          {
+            "name": "activemq / aot / p10 / started median ms",
+            "value": 4594,
+            "unit": "ms",
+            "extra": "n=30, p95=4812.8 ms"
+          },
+          {
+            "name": "activemq / aot / p10 / wall median ms",
+            "value": 5755.8,
+            "unit": "ms",
+            "extra": "n=30, p95=6009.1 ms"
+          },
+          {
+            "name": "activemq / cds / p10 / started median ms",
+            "value": 2765.5,
+            "unit": "ms",
+            "extra": "n=30, p95=2986.8 ms"
+          },
+          {
+            "name": "activemq / cds / p10 / wall median ms",
+            "value": 3626.3,
+            "unit": "ms",
+            "extra": "n=30, p95=3791.9 ms"
+          },
+          {
+            "name": "activemq / aot-cds / p10 / started median ms",
+            "value": 1913.5,
+            "unit": "ms",
+            "extra": "n=30, p95=2086.2 ms"
+          },
+          {
+            "name": "activemq / aot-cds / p10 / wall median ms",
+            "value": 2782.6,
+            "unit": "ms",
+            "extra": "n=30, p95=2963.1 ms"
+          },
+          {
+            "name": "activemq / aot-caching / p10 / started median ms",
+            "value": 2817,
+            "unit": "ms",
+            "extra": "n=30, p95=3044.9 ms"
+          },
+          {
+            "name": "activemq / aot-caching / p10 / wall median ms",
+            "value": 3670.7,
+            "unit": "ms",
+            "extra": "n=30, p95=3891.1 ms"
+          },
+          {
+            "name": "activemq / aot-aot-caching / p10 / started median ms",
+            "value": 1980.5,
+            "unit": "ms",
+            "extra": "n=30, p95=2107.9 ms"
+          },
+          {
+            "name": "activemq / aot-aot-caching / p10 / wall median ms",
+            "value": 2851.1,
+            "unit": "ms",
+            "extra": "n=30, p95=2963.1 ms"
+          },
+          {
+            "name": "activemq / alpaquita / p10 / started median ms",
+            "value": 5627,
+            "unit": "ms",
+            "extra": "n=30, p95=5905.8 ms"
+          },
+          {
+            "name": "activemq / alpaquita / p10 / wall median ms",
+            "value": 6947.4,
+            "unit": "ms",
+            "extra": "n=30, p95=7253.5 ms"
+          },
+          {
+            "name": "activemq / native / p10 / started median ms",
+            "value": 92,
+            "unit": "ms",
+            "extra": "n=30, p95=97.5 ms"
+          },
+          {
+            "name": "activemq / native / p10 / wall median ms",
+            "value": 275,
+            "unit": "ms",
+            "extra": "n=30, p95=292.3 ms"
+          },
+          {
+            "name": "activemq / plain / p20 / started median ms",
+            "value": 2811,
+            "unit": "ms",
+            "extra": "n=30, p95=2899.0 ms"
+          },
+          {
+            "name": "activemq / plain / p20 / wall median ms",
+            "value": 3542.8,
+            "unit": "ms",
+            "extra": "n=30, p95=3648.1 ms"
+          },
+          {
+            "name": "activemq / aot / p20 / started median ms",
+            "value": 2250.5,
+            "unit": "ms",
+            "extra": "n=30, p95=2316.3 ms"
+          },
+          {
+            "name": "activemq / aot / p20 / wall median ms",
+            "value": 2980.3,
+            "unit": "ms",
+            "extra": "n=30, p95=3054.0 ms"
+          },
+          {
+            "name": "activemq / cds / p20 / started median ms",
+            "value": 1400,
+            "unit": "ms",
+            "extra": "n=30, p95=1467.3 ms"
+          },
+          {
+            "name": "activemq / cds / p20 / wall median ms",
+            "value": 1972,
+            "unit": "ms",
+            "extra": "n=30, p95=2058.8 ms"
+          },
+          {
+            "name": "activemq / aot-cds / p20 / started median ms",
+            "value": 957.5,
+            "unit": "ms",
+            "extra": "n=30, p95=1018.2 ms"
+          },
+          {
+            "name": "activemq / aot-cds / p20 / wall median ms",
+            "value": 1545.2,
+            "unit": "ms",
+            "extra": "n=30, p95=1602.8 ms"
+          },
+          {
+            "name": "activemq / aot-caching / p20 / started median ms",
+            "value": 1405,
+            "unit": "ms",
+            "extra": "n=30, p95=1463.3 ms"
+          },
+          {
+            "name": "activemq / aot-caching / p20 / wall median ms",
+            "value": 1977.9,
+            "unit": "ms",
+            "extra": "n=30, p95=2065.7 ms"
+          },
+          {
+            "name": "activemq / aot-aot-caching / p20 / started median ms",
+            "value": 957,
+            "unit": "ms",
+            "extra": "n=30, p95=1014.9 ms"
+          },
+          {
+            "name": "activemq / aot-aot-caching / p20 / wall median ms",
+            "value": 1540.5,
+            "unit": "ms",
+            "extra": "n=30, p95=1620.0 ms"
+          },
+          {
+            "name": "activemq / alpaquita / p20 / started median ms",
+            "value": 2748,
+            "unit": "ms",
+            "extra": "n=30, p95=2880.0 ms"
+          },
+          {
+            "name": "activemq / alpaquita / p20 / wall median ms",
+            "value": 3569.7,
+            "unit": "ms",
+            "extra": "n=30, p95=3729.6 ms"
+          },
+          {
+            "name": "activemq / native / p20 / started median ms",
+            "value": 85,
+            "unit": "ms",
+            "extra": "n=30, p95=94.5 ms"
+          },
+          {
+            "name": "activemq / native / p20 / wall median ms",
+            "value": 265.4,
+            "unit": "ms",
+            "extra": "n=30, p95=286.6 ms"
           }
         ]
       }
