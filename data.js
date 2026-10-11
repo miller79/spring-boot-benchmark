@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791685210324,
+  "lastUpdate": 1791685220897,
   "repoUrl": "https://github.com/miller79/spring-boot-benchmark",
   "entries": {
     "spring-boot-benchmark-original": [
@@ -632,6 +632,326 @@ window.BENCHMARK_DATA = {
             "value": 3218,
             "unit": "ms",
             "extra": "n=30, p95=3239.9 ms"
+          }
+        ]
+      }
+    ],
+    "spring-boot-benchmark-tomcat": [
+      {
+        "commit": {
+          "author": {
+            "email": "anthony.lofton@jbhunt.com",
+            "name": "Anthony Lofton",
+            "username": "miller79"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "669456915f73954b49771229bb37d596613b3b66",
+          "message": "Merge pull request #139 from miller79/lofton/ENG-010-benchmark-ci\n\nENG-016: benchmark dashboard (absolute times + GitHub Pages)",
+          "timestamp": "2026-10-10T18:36:37-05:00",
+          "tree_id": "55cff795ca14fa53e3b9bf607190b9e0a853a734",
+          "url": "https://github.com/miller79/spring-boot-benchmark/commit/669456915f73954b49771229bb37d596613b3b66"
+        },
+        "date": 1791685220370,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "tomcat / aot / p06 / started ratio to plain",
+            "value": 0.7963,
+            "range": "[0.779, 0.821]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "tomcat / aot / p06 / wall ratio to plain",
+            "value": 0.8337,
+            "range": "[0.814, 0.851]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "tomcat / cds / p06 / started ratio to plain",
+            "value": 0.4956,
+            "range": "[0.484, 0.513]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "tomcat / cds / p06 / wall ratio to plain",
+            "value": 0.5331,
+            "range": "[0.521, 0.545]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "tomcat / aot-cds / p06 / started ratio to plain",
+            "value": 0.3436,
+            "range": "[0.333, 0.353]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "tomcat / aot-cds / p06 / wall ratio to plain",
+            "value": 0.4038,
+            "range": "[0.395, 0.415]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "tomcat / aot-caching / p06 / started ratio to plain",
+            "value": 0.4954,
+            "range": "[0.483, 0.510]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "tomcat / aot-caching / p06 / wall ratio to plain",
+            "value": 0.538,
+            "range": "[0.523, 0.549]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "tomcat / aot-aot-caching / p06 / started ratio to plain",
+            "value": 0.3411,
+            "range": "[0.331, 0.353]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "tomcat / aot-aot-caching / p06 / wall ratio to plain",
+            "value": 0.4047,
+            "range": "[0.394, 0.418]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "tomcat / alpaquita / p06 / started ratio to plain",
+            "value": 0.9987,
+            "range": "[0.978, 1.028]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "tomcat / alpaquita / p06 / wall ratio to plain",
+            "value": 1.0188,
+            "range": "[1.001, 1.044]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "tomcat / native / p06 / started ratio to plain",
+            "value": 0.0103,
+            "range": "[0.009, 0.011]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "tomcat / native / p06 / wall ratio to plain",
+            "value": 0.0248,
+            "range": "[0.024, 0.026]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "tomcat / aot / p10 / started ratio to plain",
+            "value": 0.7897,
+            "range": "[0.780, 0.806]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "tomcat / aot / p10 / wall ratio to plain",
+            "value": 0.8287,
+            "range": "[0.818, 0.839]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "tomcat / cds / p10 / started ratio to plain",
+            "value": 0.4953,
+            "range": "[0.485, 0.504]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "tomcat / cds / p10 / wall ratio to plain",
+            "value": 0.5357,
+            "range": "[0.528, 0.543]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "tomcat / aot-cds / p10 / started ratio to plain",
+            "value": 0.3491,
+            "range": "[0.339, 0.356]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "tomcat / aot-cds / p10 / wall ratio to plain",
+            "value": 0.4207,
+            "range": "[0.410, 0.428]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "tomcat / aot-caching / p10 / started ratio to plain",
+            "value": 0.499,
+            "range": "[0.485, 0.507]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "tomcat / aot-caching / p10 / wall ratio to plain",
+            "value": 0.5385,
+            "range": "[0.529, 0.548]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "tomcat / aot-aot-caching / p10 / started ratio to plain",
+            "value": 0.3446,
+            "range": "[0.332, 0.352]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "tomcat / aot-aot-caching / p10 / wall ratio to plain",
+            "value": 0.4182,
+            "range": "[0.406, 0.425]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "tomcat / alpaquita / p10 / started ratio to plain",
+            "value": 1.0018,
+            "range": "[0.983, 1.015]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "tomcat / alpaquita / p10 / wall ratio to plain",
+            "value": 1.0273,
+            "range": "[1.009, 1.040]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "tomcat / native / p10 / started ratio to plain",
+            "value": 0.0142,
+            "range": "[0.013, 0.015]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "tomcat / native / p10 / wall ratio to plain",
+            "value": 0.0384,
+            "range": "[0.037, 0.039]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "tomcat / aot / p20 / started ratio to plain",
+            "value": 0.7769,
+            "range": "[0.769, 0.785]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "tomcat / aot / p20 / wall ratio to plain",
+            "value": 0.8219,
+            "range": "[0.814, 0.834]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "tomcat / cds / p20 / started ratio to plain",
+            "value": 0.4868,
+            "range": "[0.476, 0.493]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "tomcat / cds / p20 / wall ratio to plain",
+            "value": 0.5499,
+            "range": "[0.543, 0.560]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "tomcat / aot-cds / p20 / started ratio to plain",
+            "value": 0.3334,
+            "range": "[0.327, 0.339]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "tomcat / aot-cds / p20 / wall ratio to plain",
+            "value": 0.4316,
+            "range": "[0.427, 0.437]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "tomcat / aot-caching / p20 / started ratio to plain",
+            "value": 0.4873,
+            "range": "[0.476, 0.493]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "tomcat / aot-caching / p20 / wall ratio to plain",
+            "value": 0.5524,
+            "range": "[0.544, 0.560]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "tomcat / aot-aot-caching / p20 / started ratio to plain",
+            "value": 0.3325,
+            "range": "[0.324, 0.339]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "tomcat / aot-aot-caching / p20 / wall ratio to plain",
+            "value": 0.4309,
+            "range": "[0.421, 0.439]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "tomcat / alpaquita / p20 / started ratio to plain",
+            "value": 0.9683,
+            "range": "[0.954, 0.983]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "tomcat / alpaquita / p20 / wall ratio to plain",
+            "value": 1.0047,
+            "range": "[0.992, 1.021]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "tomcat / native / p20 / started ratio to plain",
+            "value": 0.025,
+            "range": "[0.024, 0.027]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "tomcat / native / p20 / wall ratio to plain",
+            "value": 0.072,
+            "range": "[0.071, 0.074]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
           }
         ]
       }
