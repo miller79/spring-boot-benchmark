@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791685220897,
+  "lastUpdate": 1791685223118,
   "repoUrl": "https://github.com/miller79/spring-boot-benchmark",
   "entries": {
     "spring-boot-benchmark-original": [
@@ -952,6 +952,320 @@ window.BENCHMARK_DATA = {
             "range": "[0.071, 0.074]",
             "unit": "ratio",
             "extra": "n=30 vs plain n=30"
+          }
+        ]
+      }
+    ],
+    "spring-boot-benchmark-tomcat-absolute": [
+      {
+        "commit": {
+          "author": {
+            "email": "anthony.lofton@jbhunt.com",
+            "name": "Anthony Lofton",
+            "username": "miller79"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "669456915f73954b49771229bb37d596613b3b66",
+          "message": "Merge pull request #139 from miller79/lofton/ENG-010-benchmark-ci\n\nENG-016: benchmark dashboard (absolute times + GitHub Pages)",
+          "timestamp": "2026-10-10T18:36:37-05:00",
+          "tree_id": "55cff795ca14fa53e3b9bf607190b9e0a853a734",
+          "url": "https://github.com/miller79/spring-boot-benchmark/commit/669456915f73954b49771229bb37d596613b3b66"
+        },
+        "date": 1791685222727,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "tomcat / plain / p06 / started median ms",
+            "value": 9903.5,
+            "unit": "ms",
+            "extra": "n=30, p95=10283.1 ms"
+          },
+          {
+            "name": "tomcat / plain / p06 / wall median ms",
+            "value": 11831.5,
+            "unit": "ms",
+            "extra": "n=30, p95=12259.9 ms"
+          },
+          {
+            "name": "tomcat / aot / p06 / started median ms",
+            "value": 7886,
+            "unit": "ms",
+            "extra": "n=30, p95=8301.0 ms"
+          },
+          {
+            "name": "tomcat / aot / p06 / wall median ms",
+            "value": 9863.9,
+            "unit": "ms",
+            "extra": "n=30, p95=10359.9 ms"
+          },
+          {
+            "name": "tomcat / cds / p06 / started median ms",
+            "value": 4908,
+            "unit": "ms",
+            "extra": "n=30, p95=5209.6 ms"
+          },
+          {
+            "name": "tomcat / cds / p06 / wall median ms",
+            "value": 6307.9,
+            "unit": "ms",
+            "extra": "n=30, p95=6615.7 ms"
+          },
+          {
+            "name": "tomcat / aot-cds / p06 / started median ms",
+            "value": 3402.5,
+            "unit": "ms",
+            "extra": "n=30, p95=3601.0 ms"
+          },
+          {
+            "name": "tomcat / aot-cds / p06 / wall median ms",
+            "value": 4777.6,
+            "unit": "ms",
+            "extra": "n=30, p95=5054.1 ms"
+          },
+          {
+            "name": "tomcat / aot-caching / p06 / started median ms",
+            "value": 4906,
+            "unit": "ms",
+            "extra": "n=30, p95=5249.2 ms"
+          },
+          {
+            "name": "tomcat / aot-caching / p06 / wall median ms",
+            "value": 6364.9,
+            "unit": "ms",
+            "extra": "n=30, p95=6662.7 ms"
+          },
+          {
+            "name": "tomcat / aot-aot-caching / p06 / started median ms",
+            "value": 3378.5,
+            "unit": "ms",
+            "extra": "n=30, p95=3599.3 ms"
+          },
+          {
+            "name": "tomcat / aot-aot-caching / p06 / wall median ms",
+            "value": 4788.8,
+            "unit": "ms",
+            "extra": "n=30, p95=5054.3 ms"
+          },
+          {
+            "name": "tomcat / alpaquita / p06 / started median ms",
+            "value": 9891,
+            "unit": "ms",
+            "extra": "n=30, p95=10314.0 ms"
+          },
+          {
+            "name": "tomcat / alpaquita / p06 / wall median ms",
+            "value": 12053.5,
+            "unit": "ms",
+            "extra": "n=30, p95=12620.9 ms"
+          },
+          {
+            "name": "tomcat / native / p06 / started median ms",
+            "value": 102,
+            "unit": "ms",
+            "extra": "n=30, p95=129.1 ms"
+          },
+          {
+            "name": "tomcat / native / p06 / wall median ms",
+            "value": 293.5,
+            "unit": "ms",
+            "extra": "n=30, p95=320.7 ms"
+          },
+          {
+            "name": "tomcat / plain / p10 / started median ms",
+            "value": 5987.5,
+            "unit": "ms",
+            "extra": "n=30, p95=6197.7 ms"
+          },
+          {
+            "name": "tomcat / plain / p10 / wall median ms",
+            "value": 7212.2,
+            "unit": "ms",
+            "extra": "n=30, p95=7488.7 ms"
+          },
+          {
+            "name": "tomcat / aot / p10 / started median ms",
+            "value": 4728.5,
+            "unit": "ms",
+            "extra": "n=30, p95=4981.2 ms"
+          },
+          {
+            "name": "tomcat / aot / p10 / wall median ms",
+            "value": 5976.7,
+            "unit": "ms",
+            "extra": "n=30, p95=6247.9 ms"
+          },
+          {
+            "name": "tomcat / cds / p10 / started median ms",
+            "value": 2965.5,
+            "unit": "ms",
+            "extra": "n=30, p95=3133.3 ms"
+          },
+          {
+            "name": "tomcat / cds / p10 / wall median ms",
+            "value": 3863.3,
+            "unit": "ms",
+            "extra": "n=30, p95=3998.7 ms"
+          },
+          {
+            "name": "tomcat / aot-cds / p10 / started median ms",
+            "value": 2090,
+            "unit": "ms",
+            "extra": "n=30, p95=2255.5 ms"
+          },
+          {
+            "name": "tomcat / aot-cds / p10 / wall median ms",
+            "value": 3034,
+            "unit": "ms",
+            "extra": "n=30, p95=3199.1 ms"
+          },
+          {
+            "name": "tomcat / aot-caching / p10 / started median ms",
+            "value": 2987.5,
+            "unit": "ms",
+            "extra": "n=30, p95=3093.2 ms"
+          },
+          {
+            "name": "tomcat / aot-caching / p10 / wall median ms",
+            "value": 3884.2,
+            "unit": "ms",
+            "extra": "n=30, p95=3998.7 ms"
+          },
+          {
+            "name": "tomcat / aot-aot-caching / p10 / started median ms",
+            "value": 2063.5,
+            "unit": "ms",
+            "extra": "n=30, p95=2207.8 ms"
+          },
+          {
+            "name": "tomcat / aot-aot-caching / p10 / wall median ms",
+            "value": 3016.3,
+            "unit": "ms",
+            "extra": "n=30, p95=3181.2 ms"
+          },
+          {
+            "name": "tomcat / alpaquita / p10 / started median ms",
+            "value": 5998.5,
+            "unit": "ms",
+            "extra": "n=30, p95=6146.8 ms"
+          },
+          {
+            "name": "tomcat / alpaquita / p10 / wall median ms",
+            "value": 7409.4,
+            "unit": "ms",
+            "extra": "n=30, p95=7547.0 ms"
+          },
+          {
+            "name": "tomcat / native / p10 / started median ms",
+            "value": 85,
+            "unit": "ms",
+            "extra": "n=30, p95=92.1 ms"
+          },
+          {
+            "name": "tomcat / native / p10 / wall median ms",
+            "value": 276.6,
+            "unit": "ms",
+            "extra": "n=30, p95=291.4 ms"
+          },
+          {
+            "name": "tomcat / plain / p20 / started median ms",
+            "value": 3062,
+            "unit": "ms",
+            "extra": "n=30, p95=3154.4 ms"
+          },
+          {
+            "name": "tomcat / plain / p20 / wall median ms",
+            "value": 3848.3,
+            "unit": "ms",
+            "extra": "n=30, p95=3925.8 ms"
+          },
+          {
+            "name": "tomcat / aot / p20 / started median ms",
+            "value": 2379,
+            "unit": "ms",
+            "extra": "n=30, p95=2459.1 ms"
+          },
+          {
+            "name": "tomcat / aot / p20 / wall median ms",
+            "value": 3163.1,
+            "unit": "ms",
+            "extra": "n=30, p95=3238.3 ms"
+          },
+          {
+            "name": "tomcat / cds / p20 / started median ms",
+            "value": 1490.5,
+            "unit": "ms",
+            "extra": "n=30, p95=1574.0 ms"
+          },
+          {
+            "name": "tomcat / cds / p20 / wall median ms",
+            "value": 2116.2,
+            "unit": "ms",
+            "extra": "n=30, p95=2210.1 ms"
+          },
+          {
+            "name": "tomcat / aot-cds / p20 / started median ms",
+            "value": 1021,
+            "unit": "ms",
+            "extra": "n=30, p95=1084.2 ms"
+          },
+          {
+            "name": "tomcat / aot-cds / p20 / wall median ms",
+            "value": 1661.1,
+            "unit": "ms",
+            "extra": "n=30, p95=1706.5 ms"
+          },
+          {
+            "name": "tomcat / aot-caching / p20 / started median ms",
+            "value": 1492,
+            "unit": "ms",
+            "extra": "n=30, p95=1570.9 ms"
+          },
+          {
+            "name": "tomcat / aot-caching / p20 / wall median ms",
+            "value": 2125.9,
+            "unit": "ms",
+            "extra": "n=30, p95=2224.8 ms"
+          },
+          {
+            "name": "tomcat / aot-aot-caching / p20 / started median ms",
+            "value": 1018,
+            "unit": "ms",
+            "extra": "n=30, p95=1074.1 ms"
+          },
+          {
+            "name": "tomcat / aot-aot-caching / p20 / wall median ms",
+            "value": 1658.2,
+            "unit": "ms",
+            "extra": "n=30, p95=1754.4 ms"
+          },
+          {
+            "name": "tomcat / alpaquita / p20 / started median ms",
+            "value": 2965,
+            "unit": "ms",
+            "extra": "n=30, p95=3085.9 ms"
+          },
+          {
+            "name": "tomcat / alpaquita / p20 / wall median ms",
+            "value": 3866.5,
+            "unit": "ms",
+            "extra": "n=30, p95=3995.3 ms"
+          },
+          {
+            "name": "tomcat / native / p20 / started median ms",
+            "value": 76.5,
+            "unit": "ms",
+            "extra": "n=30, p95=87.0 ms"
+          },
+          {
+            "name": "tomcat / native / p20 / wall median ms",
+            "value": 277.2,
+            "unit": "ms",
+            "extra": "n=30, p95=290.8 ms"
           }
         ]
       }
