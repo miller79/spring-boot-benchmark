@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791685235725,
+  "lastUpdate": 1791685238198,
   "repoUrl": "https://github.com/miller79/spring-boot-benchmark",
   "entries": {
     "spring-boot-benchmark-original": [
@@ -1586,6 +1586,320 @@ window.BENCHMARK_DATA = {
             "range": "[0.434, 0.492]",
             "unit": "ratio",
             "extra": "n=30 vs plain n=30"
+          }
+        ]
+      }
+    ],
+    "spring-boot-benchmark-data-jpa-absolute": [
+      {
+        "commit": {
+          "author": {
+            "email": "anthony.lofton@jbhunt.com",
+            "name": "Anthony Lofton",
+            "username": "miller79"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "669456915f73954b49771229bb37d596613b3b66",
+          "message": "Merge pull request #139 from miller79/lofton/ENG-010-benchmark-ci\n\nENG-016: benchmark dashboard (absolute times + GitHub Pages)",
+          "timestamp": "2026-10-10T18:36:37-05:00",
+          "tree_id": "55cff795ca14fa53e3b9bf607190b9e0a853a734",
+          "url": "https://github.com/miller79/spring-boot-benchmark/commit/669456915f73954b49771229bb37d596613b3b66"
+        },
+        "date": 1791685237585,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "data-jpa / plain / p06 / started median ms",
+            "value": 12493,
+            "unit": "ms",
+            "extra": "n=30, p95=12960.2 ms"
+          },
+          {
+            "name": "data-jpa / plain / p06 / wall median ms",
+            "value": 16651.7,
+            "unit": "ms",
+            "extra": "n=30, p95=17297.1 ms"
+          },
+          {
+            "name": "data-jpa / aot / p06 / started median ms",
+            "value": 10602,
+            "unit": "ms",
+            "extra": "n=30, p95=11055.0 ms"
+          },
+          {
+            "name": "data-jpa / aot / p06 / wall median ms",
+            "value": 14782.4,
+            "unit": "ms",
+            "extra": "n=30, p95=15491.2 ms"
+          },
+          {
+            "name": "data-jpa / cds / p06 / started median ms",
+            "value": 5153,
+            "unit": "ms",
+            "extra": "n=30, p95=5457.4 ms"
+          },
+          {
+            "name": "data-jpa / cds / p06 / wall median ms",
+            "value": 8804.1,
+            "unit": "ms",
+            "extra": "n=30, p95=9659.0 ms"
+          },
+          {
+            "name": "data-jpa / aot-cds / p06 / started median ms",
+            "value": 3821.5,
+            "unit": "ms",
+            "extra": "n=30, p95=3989.8 ms"
+          },
+          {
+            "name": "data-jpa / aot-cds / p06 / wall median ms",
+            "value": 7188.9,
+            "unit": "ms",
+            "extra": "n=30, p95=8205.0 ms"
+          },
+          {
+            "name": "data-jpa / aot-caching / p06 / started median ms",
+            "value": 5051,
+            "unit": "ms",
+            "extra": "n=30, p95=5497.2 ms"
+          },
+          {
+            "name": "data-jpa / aot-caching / p06 / wall median ms",
+            "value": 9204.7,
+            "unit": "ms",
+            "extra": "n=30, p95=9697.5 ms"
+          },
+          {
+            "name": "data-jpa / aot-aot-caching / p06 / started median ms",
+            "value": 3879,
+            "unit": "ms",
+            "extra": "n=30, p95=4085.6 ms"
+          },
+          {
+            "name": "data-jpa / aot-aot-caching / p06 / wall median ms",
+            "value": 7179.6,
+            "unit": "ms",
+            "extra": "n=30, p95=8195.8 ms"
+          },
+          {
+            "name": "data-jpa / alpaquita / p06 / started median ms",
+            "value": 12485,
+            "unit": "ms",
+            "extra": "n=30, p95=13195.1 ms"
+          },
+          {
+            "name": "data-jpa / alpaquita / p06 / wall median ms",
+            "value": 16818.6,
+            "unit": "ms",
+            "extra": "n=30, p95=17348.3 ms"
+          },
+          {
+            "name": "data-jpa / native / p06 / started median ms",
+            "value": 187,
+            "unit": "ms",
+            "extra": "n=30, p95=220.6 ms"
+          },
+          {
+            "name": "data-jpa / native / p06 / wall median ms",
+            "value": 3466.1,
+            "unit": "ms",
+            "extra": "n=30, p95=3620.7 ms"
+          },
+          {
+            "name": "data-jpa / plain / p10 / started median ms",
+            "value": 7577,
+            "unit": "ms",
+            "extra": "n=30, p95=8061.8 ms"
+          },
+          {
+            "name": "data-jpa / plain / p10 / wall median ms",
+            "value": 11062.2,
+            "unit": "ms",
+            "extra": "n=30, p95=11884.5 ms"
+          },
+          {
+            "name": "data-jpa / aot / p10 / started median ms",
+            "value": 6408,
+            "unit": "ms",
+            "extra": "n=30, p95=6727.2 ms"
+          },
+          {
+            "name": "data-jpa / aot / p10 / wall median ms",
+            "value": 10004.4,
+            "unit": "ms",
+            "extra": "n=30, p95=10921.6 ms"
+          },
+          {
+            "name": "data-jpa / cds / p10 / started median ms",
+            "value": 3124,
+            "unit": "ms",
+            "extra": "n=30, p95=3300.4 ms"
+          },
+          {
+            "name": "data-jpa / cds / p10 / wall median ms",
+            "value": 6048.8,
+            "unit": "ms",
+            "extra": "n=30, p95=7175.1 ms"
+          },
+          {
+            "name": "data-jpa / aot-cds / p10 / started median ms",
+            "value": 2315,
+            "unit": "ms",
+            "extra": "n=30, p95=2597.8 ms"
+          },
+          {
+            "name": "data-jpa / aot-cds / p10 / wall median ms",
+            "value": 5384.7,
+            "unit": "ms",
+            "extra": "n=30, p95=6335.7 ms"
+          },
+          {
+            "name": "data-jpa / aot-caching / p10 / started median ms",
+            "value": 3059.5,
+            "unit": "ms",
+            "extra": "n=30, p95=3379.0 ms"
+          },
+          {
+            "name": "data-jpa / aot-caching / p10 / wall median ms",
+            "value": 6805.8,
+            "unit": "ms",
+            "extra": "n=30, p95=7254.0 ms"
+          },
+          {
+            "name": "data-jpa / aot-aot-caching / p10 / started median ms",
+            "value": 2294,
+            "unit": "ms",
+            "extra": "n=30, p95=2488.0 ms"
+          },
+          {
+            "name": "data-jpa / aot-aot-caching / p10 / wall median ms",
+            "value": 5250.8,
+            "unit": "ms",
+            "extra": "n=30, p95=6291.9 ms"
+          },
+          {
+            "name": "data-jpa / alpaquita / p10 / started median ms",
+            "value": 7501,
+            "unit": "ms",
+            "extra": "n=30, p95=7773.6 ms"
+          },
+          {
+            "name": "data-jpa / alpaquita / p10 / wall median ms",
+            "value": 11417,
+            "unit": "ms",
+            "extra": "n=30, p95=12088.5 ms"
+          },
+          {
+            "name": "data-jpa / native / p10 / started median ms",
+            "value": 138,
+            "unit": "ms",
+            "extra": "n=30, p95=166.8 ms"
+          },
+          {
+            "name": "data-jpa / native / p10 / wall median ms",
+            "value": 3381.7,
+            "unit": "ms",
+            "extra": "n=30, p95=3691.7 ms"
+          },
+          {
+            "name": "data-jpa / plain / p20 / started median ms",
+            "value": 3996.5,
+            "unit": "ms",
+            "extra": "n=30, p95=4792.0 ms"
+          },
+          {
+            "name": "data-jpa / plain / p20 / wall median ms",
+            "value": 7527.9,
+            "unit": "ms",
+            "extra": "n=30, p95=8379.2 ms"
+          },
+          {
+            "name": "data-jpa / aot / p20 / started median ms",
+            "value": 3461,
+            "unit": "ms",
+            "extra": "n=30, p95=3929.8 ms"
+          },
+          {
+            "name": "data-jpa / aot / p20 / wall median ms",
+            "value": 6779.7,
+            "unit": "ms",
+            "extra": "n=30, p95=7622.4 ms"
+          },
+          {
+            "name": "data-jpa / cds / p20 / started median ms",
+            "value": 1613,
+            "unit": "ms",
+            "extra": "n=30, p95=1899.5 ms"
+          },
+          {
+            "name": "data-jpa / cds / p20 / wall median ms",
+            "value": 4385.3,
+            "unit": "ms",
+            "extra": "n=30, p95=5225.4 ms"
+          },
+          {
+            "name": "data-jpa / aot-cds / p20 / started median ms",
+            "value": 1254,
+            "unit": "ms",
+            "extra": "n=30, p95=1459.6 ms"
+          },
+          {
+            "name": "data-jpa / aot-cds / p20 / wall median ms",
+            "value": 4147.7,
+            "unit": "ms",
+            "extra": "n=30, p95=5136.6 ms"
+          },
+          {
+            "name": "data-jpa / aot-caching / p20 / started median ms",
+            "value": 1607.5,
+            "unit": "ms",
+            "extra": "n=30, p95=1989.4 ms"
+          },
+          {
+            "name": "data-jpa / aot-caching / p20 / wall median ms",
+            "value": 4653,
+            "unit": "ms",
+            "extra": "n=30, p95=5814.8 ms"
+          },
+          {
+            "name": "data-jpa / aot-aot-caching / p20 / started median ms",
+            "value": 1255.5,
+            "unit": "ms",
+            "extra": "n=30, p95=1459.0 ms"
+          },
+          {
+            "name": "data-jpa / aot-aot-caching / p20 / wall median ms",
+            "value": 4121.9,
+            "unit": "ms",
+            "extra": "n=30, p95=4841.1 ms"
+          },
+          {
+            "name": "data-jpa / alpaquita / p20 / started median ms",
+            "value": 3839,
+            "unit": "ms",
+            "extra": "n=30, p95=4500.1 ms"
+          },
+          {
+            "name": "data-jpa / alpaquita / p20 / wall median ms",
+            "value": 7492.5,
+            "unit": "ms",
+            "extra": "n=30, p95=8284.6 ms"
+          },
+          {
+            "name": "data-jpa / native / p20 / started median ms",
+            "value": 137,
+            "unit": "ms",
+            "extra": "n=30, p95=164.0 ms"
+          },
+          {
+            "name": "data-jpa / native / p20 / wall median ms",
+            "value": 3391.3,
+            "unit": "ms",
+            "extra": "n=30, p95=3723.0 ms"
           }
         ]
       }
