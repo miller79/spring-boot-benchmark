@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791685223118,
+  "lastUpdate": 1791685235725,
   "repoUrl": "https://github.com/miller79/spring-boot-benchmark",
   "entries": {
     "spring-boot-benchmark-original": [
@@ -1266,6 +1266,326 @@ window.BENCHMARK_DATA = {
             "value": 277.2,
             "unit": "ms",
             "extra": "n=30, p95=290.8 ms"
+          }
+        ]
+      }
+    ],
+    "spring-boot-benchmark-data-jpa": [
+      {
+        "commit": {
+          "author": {
+            "email": "anthony.lofton@jbhunt.com",
+            "name": "Anthony Lofton",
+            "username": "miller79"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "669456915f73954b49771229bb37d596613b3b66",
+          "message": "Merge pull request #139 from miller79/lofton/ENG-010-benchmark-ci\n\nENG-016: benchmark dashboard (absolute times + GitHub Pages)",
+          "timestamp": "2026-10-10T18:36:37-05:00",
+          "tree_id": "55cff795ca14fa53e3b9bf607190b9e0a853a734",
+          "url": "https://github.com/miller79/spring-boot-benchmark/commit/669456915f73954b49771229bb37d596613b3b66"
+        },
+        "date": 1791685234973,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "data-jpa / aot / p06 / started ratio to plain",
+            "value": 0.8486,
+            "range": "[0.834, 0.866]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "data-jpa / aot / p06 / wall ratio to plain",
+            "value": 0.8877,
+            "range": "[0.869, 0.905]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "data-jpa / cds / p06 / started ratio to plain",
+            "value": 0.4125,
+            "range": "[0.406, 0.424]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "data-jpa / cds / p06 / wall ratio to plain",
+            "value": 0.5287,
+            "range": "[0.511, 0.556]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "data-jpa / aot-cds / p06 / started ratio to plain",
+            "value": 0.3059,
+            "range": "[0.303, 0.314]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "data-jpa / aot-cds / p06 / wall ratio to plain",
+            "value": 0.4317,
+            "range": "[0.423, 0.441]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "data-jpa / aot-caching / p06 / started ratio to plain",
+            "value": 0.4043,
+            "range": "[0.398, 0.417]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "data-jpa / aot-caching / p06 / wall ratio to plain",
+            "value": 0.5528,
+            "range": "[0.535, 0.566]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "data-jpa / aot-aot-caching / p06 / started ratio to plain",
+            "value": 0.3105,
+            "range": "[0.303, 0.315]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "data-jpa / aot-aot-caching / p06 / wall ratio to plain",
+            "value": 0.4312,
+            "range": "[0.423, 0.440]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "data-jpa / alpaquita / p06 / started ratio to plain",
+            "value": 0.9994,
+            "range": "[0.984, 1.012]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "data-jpa / alpaquita / p06 / wall ratio to plain",
+            "value": 1.01,
+            "range": "[0.988, 1.028]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "data-jpa / native / p06 / started ratio to plain",
+            "value": 0.015,
+            "range": "[0.014, 0.016]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "data-jpa / native / p06 / wall ratio to plain",
+            "value": 0.2082,
+            "range": "[0.205, 0.212]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "data-jpa / aot / p10 / started ratio to plain",
+            "value": 0.8457,
+            "range": "[0.828, 0.865]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "data-jpa / aot / p10 / wall ratio to plain",
+            "value": 0.9044,
+            "range": "[0.845, 0.957]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "data-jpa / cds / p10 / started ratio to plain",
+            "value": 0.4123,
+            "range": "[0.406, 0.423]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "data-jpa / cds / p10 / wall ratio to plain",
+            "value": 0.5468,
+            "range": "[0.529, 0.572]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "data-jpa / aot-cds / p10 / started ratio to plain",
+            "value": 0.3055,
+            "range": "[0.299, 0.316]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "data-jpa / aot-cds / p10 / wall ratio to plain",
+            "value": 0.4868,
+            "range": "[0.468, 0.508]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "data-jpa / aot-caching / p10 / started ratio to plain",
+            "value": 0.4038,
+            "range": "[0.395, 0.414]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "data-jpa / aot-caching / p10 / wall ratio to plain",
+            "value": 0.6152,
+            "range": "[0.543, 0.643]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "data-jpa / aot-aot-caching / p10 / started ratio to plain",
+            "value": 0.3028,
+            "range": "[0.298, 0.315]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "data-jpa / aot-aot-caching / p10 / wall ratio to plain",
+            "value": 0.4747,
+            "range": "[0.461, 0.499]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "data-jpa / alpaquita / p10 / started ratio to plain",
+            "value": 0.99,
+            "range": "[0.970, 1.008]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "data-jpa / alpaquita / p10 / wall ratio to plain",
+            "value": 1.0321,
+            "range": "[0.995, 1.073]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "data-jpa / native / p10 / started ratio to plain",
+            "value": 0.0182,
+            "range": "[0.017, 0.019]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "data-jpa / native / p10 / wall ratio to plain",
+            "value": 0.3057,
+            "range": "[0.296, 0.318]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "data-jpa / aot / p20 / started ratio to plain",
+            "value": 0.866,
+            "range": "[0.814, 0.938]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "data-jpa / aot / p20 / wall ratio to plain",
+            "value": 0.9006,
+            "range": "[0.833, 0.985]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "data-jpa / cds / p20 / started ratio to plain",
+            "value": 0.4036,
+            "range": "[0.385, 0.426]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "data-jpa / cds / p20 / wall ratio to plain",
+            "value": 0.5825,
+            "range": "[0.561, 0.633]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "data-jpa / aot-cds / p20 / started ratio to plain",
+            "value": 0.3138,
+            "range": "[0.295, 0.331]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "data-jpa / aot-cds / p20 / wall ratio to plain",
+            "value": 0.551,
+            "range": "[0.526, 0.656]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "data-jpa / aot-caching / p20 / started ratio to plain",
+            "value": 0.4022,
+            "range": "[0.382, 0.424]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "data-jpa / aot-caching / p20 / wall ratio to plain",
+            "value": 0.6181,
+            "range": "[0.573, 0.716]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "data-jpa / aot-aot-caching / p20 / started ratio to plain",
+            "value": 0.3141,
+            "range": "[0.293, 0.334]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "data-jpa / aot-aot-caching / p20 / wall ratio to plain",
+            "value": 0.5476,
+            "range": "[0.527, 0.597]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "data-jpa / alpaquita / p20 / started ratio to plain",
+            "value": 0.9606,
+            "range": "[0.913, 1.015]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "data-jpa / alpaquita / p20 / wall ratio to plain",
+            "value": 0.9953,
+            "range": "[0.943, 1.079]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "data-jpa / native / p20 / started ratio to plain",
+            "value": 0.0343,
+            "range": "[0.033, 0.036]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
+          },
+          {
+            "name": "data-jpa / native / p20 / wall ratio to plain",
+            "value": 0.4505,
+            "range": "[0.434, 0.492]",
+            "unit": "ratio",
+            "extra": "n=30 vs plain n=30"
           }
         ]
       }
