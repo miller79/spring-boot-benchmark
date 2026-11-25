@@ -29,11 +29,34 @@ class Table(HTMLParser):
         self.tables = 0
         self.links = []
         self.scripts = 0
+        self.module = None
+        self.details_depth = 0
+        self.matrices = {}
+        self.matrix_disclosed = {}
+        self.matrix_rows = None
+        self.stamps = {}
+        self.stamp = None
+        self.stamp_key = None
+        self.ids = []
 
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
-        if tag == "table":
+        if "id" in attrs:
+            self.ids.append(attrs["id"])
+        if tag == "section":
+            self.module = attrs.get("id")
+        elif tag == "details":
+            self.details_depth += 1
+        elif tag == "p" and attrs.get("class") == "publication":
+            self.stamp = ""
+            self.stamp_key = attrs.get("data-run", self.module)
+        elif tag == "table":
             self.tables += 1
+            self.matrix_rows = []
+        elif tag == "caption":
+            anchor, metric = attrs["id"].rsplit("-", 1)
+            self.matrices[(anchor, metric)] = self.matrix_rows
+            self.matrix_disclosed[(anchor, metric)] = self.details_depth > 0
         elif tag == "tr":
             self.row = []
         elif tag in ("td", "th"):
@@ -46,6 +69,8 @@ class Table(HTMLParser):
     def handle_data(self, data):
         if self.cell is not None:
             self.cell += data
+        if self.stamp is not None:
+            self.stamp += data
 
     def handle_endtag(self, tag):
         if tag in ("td", "th") and self.cell is not None:
@@ -53,7 +78,17 @@ class Table(HTMLParser):
             self.cell = None
         elif tag == "tr" and self.row is not None:
             self.rows.append(self.row)
+            self.matrix_rows.append(self.row)
             self.row = None
+        elif tag == "table":
+            self.matrix_rows = None
+        elif tag == "p" and self.stamp is not None:
+            self.stamps[self.stamp_key] = self.stamp
+            self.stamp = None
+        elif tag == "details":
+            self.details_depth -= 1
+        elif tag == "section":
+            self.module = None
 
 
 def fixture():
@@ -83,21 +118,42 @@ def table(html):
     return parsed
 
 
+def matrix_cell(parsed, module, profile, cpu, metric="started"):
+    rows = parsed.matrices[(module, metric)]
+    column = rows[0].index(f"{cpu} CPU")
+    row = next(row for row in rows[1:] if row[0] == profile)
+    median, ratio = row[column].split(" Ratio: ")
+    return [median.removesuffix(" ms"), ratio]
+
+
 class PublicationTests(unittest.TestCase):
     def test_real_published_staging_path(self):
         self.assertEqual(hashlib.sha256(FIXTURE.read_bytes()).hexdigest(), FIXTURE_SHA256)
         result, html, output_data, raw, files = staged(fixture())
         self.assertEqual(result.returncode, 0, result.stderr)
         parsed = table(html)
-        self.assertEqual(parsed.tables, 1, "base chart publish has no readable results table")
-        self.assertEqual(len(parsed.rows), 145)  # header + six modules x eight profiles x three CPUs
-        self.assertTrue(all(len(row) == 8 for row in parsed.rows))
-        original_plain = next(r for r in parsed.rows if r[:3] == ["WebFlux (Netty)", "plain", "0.6"])
-        self.assertEqual(original_plain[3:7], ["6401.5", "9832", "1 (reference)", "1 (reference)"])
-        original_aot = next(r for r in parsed.rows if r[:3] == ["WebFlux (Netty)", "aot", "0.6"])
-        self.assertEqual(original_aot[5:7], ["0.7969 [0.768, 0.824]", "0.8978 [0.837, 0.935]"])
-        self.assertIn("2026-10-11", original_aot[7])
-        self.assertIn("6694569", original_aot[7])
+        self.assertEqual(parsed.tables, 12, "expected six startup matrices and six disclosed wall matrices")
+        modules = ("original", "tomcat", "data-jpa", "data-rest", "activemq", "all")
+        profiles = ["plain", "aot", "cds", "aot-cds", "aot-caching",
+                    "aot-aot-caching", "alpaquita", "native"]
+        for module in modules:
+            for metric in ("started", "wall"):
+                rows = parsed.matrices[(module, metric)]
+                self.assertEqual(rows[0], ["Build profile", "p06 / 0.6 CPU", "p10 / 1.0 CPU", "p20 / 2.0 CPU"])
+                self.assertEqual([row[0] for row in rows[1:]], profiles)
+                self.assertTrue(all(len(row) == 4 for row in rows))
+                self.assertTrue(all(" ms Ratio: " in cell for row in rows[1:] for cell in row[1:]))
+                self.assertEqual(parsed.matrix_disclosed[(module, metric)], metric == "wall")
+            self.assertIn("2026-10-11", parsed.stamps[module])
+            self.assertIn("6694569", parsed.stamps[module])
+        self.assertEqual(matrix_cell(parsed, "original", "plain", "p06 / 0.6"),
+                         ["6401.5", "1 (reference)"])
+        self.assertEqual(matrix_cell(parsed, "original", "plain", "p06 / 0.6", "wall"),
+                         ["9832", "1 (reference)"])
+        self.assertEqual(matrix_cell(parsed, "original", "aot", "p06 / 0.6"),
+                         ["5101.5", "0.7969 [0.768, 0.824]"])
+        self.assertEqual(matrix_cell(parsed, "original", "aot", "p06 / 0.6", "wall"),
+                         ["8827.1", "0.8978 [0.837, 0.935]"])
         self.assertEqual(output_data, raw)
         self.assertEqual(files, ["data.js", "index.html"])
         self.assertEqual(parsed.scripts, 0)
@@ -106,23 +162,17 @@ class PublicationTests(unittest.TestCase):
         self.assertIn("./measure-runtime.sh 5", html)
         self.assertIn("manual runs do not publish", html)
         self.assertIn("95% bootstrap", html)
-        labels = {
-            "original": "WebFlux (Netty)", "tomcat": "Spring MVC (Tomcat)", "data-jpa": "Data JPA",
-            "data-rest": "Data REST", "activemq": "ActiveMQ", "all": "All dependencies",
-        }
-        cpus = {"p06": "0.6", "p10": "1.0", "p20": "2.0"}
-        rows = {tuple(row[:3]): row for row in parsed.rows[1:]}
+        cpus = {"p06": "p06 / 0.6", "p10": "p10 / 1.0", "p20": "p20 / 2.0"}
         checked = 0
         for group, entries in fixture()["entries"].items():
             absolute = group.endswith("-absolute")
             for bench in entries[0]["benches"]:
                 module, profile, cp, metric = bench["name"].split(" / ")
-                row = rows[(labels[module], profile, cpus[cp])]
-                column = (3 if absolute else 5) + (1 if metric.startswith("wall") else 0)
+                cell = matrix_cell(parsed, module, profile, cpus[cp], metric.split()[0])
                 expected = str(bench["value"])
                 if not absolute:
                     expected += " " + bench["range"]
-                self.assertEqual(row[column], expected, bench["name"])
+                self.assertEqual(cell[0 if absolute else 1], expected, bench["name"])
                 checked += 1
         self.assertEqual(checked, 540)
 
@@ -147,14 +197,14 @@ class LatestPublicationTests(unittest.TestCase):
         data["entries"][key].insert(0, newer)
         result, html, *_ = staged(data)
         self.assertEqual(result.returncode, 0, result.stderr)
-        rows = table(html).rows
-        original = next(r for r in rows if r[:3] == ["WebFlux (Netty)", "aot", "0.6"])
-        self.assertEqual(original[3:5], ["n/a", "n/a"])  # absolute publication is still old
-        self.assertTrue(original[5].startswith("0.1234 "))
-        self.assertIn("2026-10-12", original[7])
-        tomcat = next(r for r in rows if r[:3] == ["Spring MVC (Tomcat)", "plain", "0.6"])
-        self.assertEqual(tomcat[3], "9903.5")
-        self.assertIn("2026-10-11", tomcat[7])
+        parsed = table(html)
+        original = matrix_cell(parsed, "original", "aot", "p06 / 0.6")
+        self.assertEqual(original[0], "n/a")  # absolute publication is still old
+        self.assertEqual(matrix_cell(parsed, "original", "aot", "p06 / 0.6", "wall")[0], "n/a")
+        self.assertTrue(original[1].startswith("0.1234 "))
+        self.assertIn("2026-10-12", parsed.stamps["original"])
+        self.assertEqual(matrix_cell(parsed, "tomcat", "plain", "p06 / 0.6")[0], "9903.5")
+        self.assertIn("2026-10-11", parsed.stamps["tomcat"])
 
     def test_same_commit_rerun_does_not_reuse_old_absolutes(self):
         data = fixture()
@@ -164,8 +214,9 @@ class LatestPublicationTests(unittest.TestCase):
         data["entries"][key].append(newer)
         result, html, *_ = staged(data)
         self.assertEqual(result.returncode, 0, result.stderr)
-        row = next(r for r in table(html).rows if r[:3] == ["WebFlux (Netty)", "aot", "0.6"])
-        self.assertEqual(row[3:5], ["n/a", "n/a"])
+        parsed = table(html)
+        for metric in ("started", "wall"):
+            self.assertEqual(matrix_cell(parsed, "original", "aot", "p06 / 0.6", metric)[0], "n/a")
 
     def test_empty_and_absolute_only_are_explicit(self):
         for data, expected in (
@@ -179,6 +230,12 @@ class LatestPublicationTests(unittest.TestCase):
                 self.assertEqual(result.returncode, 0, result.stderr)
                 self.assertIn(expected, html)
                 self.assertIn("Not yet published", html)
+                if expected == "absolute only":
+                    parsed = table(html)
+                    self.assertEqual(matrix_cell(parsed, "original", "aot", "p06 / 0.6"),
+                                     ["5101.5", "n/a"])
+                    self.assertEqual(matrix_cell(parsed, "original", "plain", "p06 / 0.6"),
+                                     ["6401.5", "1 (reference)"])
 
     def test_equal_date_last_rerun_wins_and_missing_cells_stay_missing(self):
         data = fixture()
@@ -189,9 +246,72 @@ class LatestPublicationTests(unittest.TestCase):
         data["entries"][key].append(newer)
         result, html, *_ = staged(data)
         self.assertEqual(result.returncode, 0, result.stderr)
-        row = next(r for r in table(html).rows if r[:3] == ["WebFlux (Netty)", "aot", "0.6"])
-        self.assertTrue(row[5].startswith("0.4321 "))
-        self.assertEqual(row[6], "n/a")
+        parsed = table(html)
+        self.assertTrue(matrix_cell(parsed, "original", "aot", "p06 / 0.6")[1].startswith("0.4321 "))
+        self.assertEqual(matrix_cell(parsed, "original", "aot", "p06 / 0.6", "wall")[1], "n/a")
+
+
+class HistoryTests(unittest.TestCase):
+    def test_real_single_run_index_is_honest(self):
+        result, html, output_data, raw, files = staged(fixture())
+        self.assertEqual(result.returncode, 0, result.stderr)
+        parsed = table(html)
+        for module in ("original", "tomcat", "data-jpa", "data-rest", "activemq", "all"):
+            self.assertIn(f"#{module}-run-0", parsed.links)
+        self.assertEqual(html.count("No earlier published run"), 6)
+        self.assertIn("Smoke and manual Actions runs are not in published history", html)
+        self.assertEqual(len(parsed.ids), len(set(parsed.ids)))
+        self.assertEqual(output_data, raw)
+        self.assertEqual(files, ["data.js", "index.html"])
+        self.assertEqual(parsed.scripts, 0)
+
+    def test_specific_older_run_is_linked_and_keeps_its_values(self):
+        data = fixture()
+        group = "spring-boot-benchmark-original"
+        newer = copy.deepcopy(data["entries"][group][0])
+        newer["date"] += 86400000
+        newer["commit"]["id"] = "a" * 40
+        newer["benches"][0]["value"] = 0.1234
+        newer_absolute = copy.deepcopy(data["entries"][group + "-absolute"][0])
+        newer_absolute["date"] += 86400000
+        newer_absolute["commit"]["id"] = "a" * 40
+        newer_absolute["benches"][2]["value"] = 2500
+        data["entries"][group].append(newer)
+        data["entries"][group + "-absolute"].append(newer_absolute)
+        result, html, *_ = staged(data)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        parsed = table(html)
+        links = [link for link in parsed.links if link.startswith("#original-run-")]
+        self.assertEqual(links, ["#original-run-1", "#original-run-0"])
+        self.assertEqual(matrix_cell(parsed, "original", "aot", "p06 / 0.6"),
+                         ["2500", "0.1234 [0.768, 0.824]"])
+        self.assertEqual(matrix_cell(parsed, "original-run-0", "aot", "p06 / 0.6"),
+                         ["5101.5", "0.7969 [0.768, 0.824]"])
+        self.assertIn("2026-10-12", parsed.stamps["original"])
+        self.assertIn("2026-10-11", parsed.stamps["original-run-0"])
+        self.assertTrue(parsed.matrix_disclosed[("original-run-0", "started")])
+        self.assertFalse(parsed.matrix_disclosed[("original", "started")])
+        self.assertEqual(len(parsed.ids), len(set(parsed.ids)))
+
+    def test_older_same_sha_run_cannot_borrow_later_absolute_publication(self):
+        for offset in (86400000, 0):
+            with self.subTest(offset=offset):
+                data = fixture()
+                group = "spring-boot-benchmark-original"
+                newer = copy.deepcopy(data["entries"][group][0])
+                newer["date"] += offset
+                data["entries"][group].append(newer)
+                absolute = copy.deepcopy(data["entries"][group + "-absolute"][0])
+                absolute["date"] += offset
+                absolute["benches"][2]["value"] = 1111
+                data["entries"][group + "-absolute"] = [absolute]
+                result, html, *_ = staged(data)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                parsed = table(html)
+                self.assertEqual(matrix_cell(parsed, "original", "aot", "p06 / 0.6")[0], "1111")
+                for metric in ("started", "wall"):
+                    self.assertEqual(matrix_cell(parsed, "original-run-0", "aot", "p06 / 0.6", metric)[0],
+                                     "n/a")
 
 
 class ControlTests(unittest.TestCase):

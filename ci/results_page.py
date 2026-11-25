@@ -87,11 +87,6 @@ def checked_entries(entries, module, absolute):
     return out
 
 
-def latest(entries):
-    # The final appended rerun wins when timestamps tie.
-    return max(enumerate(entries), key=lambda item: (item[1]["date"], item[0]))[1] if entries else None
-
-
 def median(cells, key):
     return str(cells[key]["value"]) if key in cells else "n/a"
 
@@ -104,106 +99,184 @@ def ratio(cells, absolute, key):
     return f"{bench['value']} {bench['range']}" if bench else "n/a"
 
 
+def matrix(module, label, metric, ratio_cells, abs_cells, published=True):
+    title = "Started median (ms)" if metric == "started" else "Wall median (ms)"
+    headers = "".join(f'<th scope="col">{cp} / {cpu} CPU</th>' for cp, cpu in CPUS.items())
+    rows = []
+    if published:
+        for profile in PROFILES:
+            cells = []
+            for cp in CPUS:
+                key = (profile, cp, metric)
+                value = median(abs_cells, key)
+                time = f"{value} ms" if key in abs_cells else value
+                comparison = ratio(ratio_cells, abs_cells, key)
+                cells.append(f"<td><strong>{escape(time)}</strong> "
+                             f"<small>Ratio: {escape(comparison)}</small></td>")
+            rows.append(f'<tr><th scope="row">{escape(profile)}</th>{"".join(cells)}</tr>')
+    else:
+        rows.append('<tr><td colspan="4">Not yet published</td></tr>')
+    return f"""<div class="results" role="region" aria-labelledby="{module}-{metric}" tabindex="0">
+<table>
+<caption id="{module}-{metric}">{escape(label)} - {title}</caption>
+<thead><tr><th scope="col">Build profile</th>{headers}</tr></thead>
+<tbody>{chr(10).join(rows)}</tbody>
+</table></div>"""
+
+
+def paired_absolute(ratios, absolutes, index):
+    publication = ratios[index]
+    # A later same-SHA rerun bounds this publication, including timestamp ties.
+    later = [entry["date"] for i, entry in enumerate(ratios)
+             if entry["sha"] == publication["sha"]
+             and (entry["date"], i) > (publication["date"], index)]
+    end = min(later) if later else math.inf
+    matching = [entry for entry in absolutes if entry["sha"] == publication["sha"]
+                and publication["date"] <= entry["date"] < end]
+    return min(matching, key=lambda entry: entry["date"]) if matching else None
+
+
+def publication_date(publication):
+    return datetime.fromtimestamp(publication["date"] / 1000, timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+
+
+def publication_matrices(anchor, label, publication, absolute, absolute_only):
+    sha = publication["sha"]
+    stamp = f'{publication_date(publication)} <a href="{REPO}/commit/{sha}">{sha[:7]}</a>'
+    if absolute_only:
+        stamp += " (absolute only)"
+    ratio_cells = {} if absolute_only else publication["cells"]
+    abs_cells = absolute["cells"] if absolute else {}
+    return (f'<p class="publication" data-run="{anchor}">Published: {stamp}</p>'
+            + matrix(anchor, label, "started", ratio_cells, abs_cells)
+            + '<details><summary>Wall time and ratios (includes Docker overhead)</summary>'
+            + matrix(anchor, label, "wall", ratio_cells, abs_cells)
+            + '</details>')
+
+
 def render(entries):
     allowed = {f"spring-boot-benchmark-{module}{suffix}"
                for module in MODULES for suffix in ("", "-absolute")}
     if any(name not in allowed for name in entries):
         raise ValueError("publication group is not allowlisted")
-    rows = []
+    sections = []
     links = []
     any_results = False
     for module, label in MODULES.items():
         group = f"spring-boot-benchmark-{module}"
         ratios = checked_entries(entries.get(group, []), module, False)
         absolutes = checked_entries(entries.get(group + "-absolute", []), module, True)
-        publication = latest(ratios)
-        absolute = None
-        absolute_only = publication is None
-        if publication:
-            # Absolute publishing follows ratios. Older same-SHA reruns must not fill missing data.
-            matching = [e for e in absolutes if e["sha"] == publication["sha"]
-                        and e["date"] >= publication["date"]]
-            absolute = min(matching, key=lambda e: e["date"]) if matching else None
-        else:
-            publication = absolute = latest(absolutes)
+        absolute_only = not ratios
+        runs = sorted(enumerate(ratios or absolutes),
+                      key=lambda item: (item[1]["date"], item[0]), reverse=True)
+        publication = runs[0][1] if runs else None
         links.append(f'<a href="#{module}">{escape(label)}</a>')
         if not publication or not publication["cells"]:
-            rows.append(f'<tr id="{module}"><th scope="row">{escape(label)}</th>'
-                        '<td colspan="7">Not yet published</td></tr>')
+            sections.append(f'<section id="{module}"><h2>{escape(label)}</h2>'
+                            + matrix(module, label, "started", {}, {}, published=False)
+                            + '</section>')
             continue
         any_results = True
         sha = publication["sha"]
-        date = datetime.fromtimestamp(publication["date"] / 1000, timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
-        stamp = f'{date} <a href="{REPO}/commit/{sha}">{sha[:7]}</a>'
-        if absolute_only:
-            stamp += " (absolute only)"
-        ratio_cells = {} if absolute_only else publication["cells"]
-        abs_cells = absolute["cells"] if absolute else {}
-        first = True
-        for cp, cpu in CPUS.items():
-            for profile in PROFILES:
-                fields = [profile, cpu,
-                          median(abs_cells, (profile, cp, "started")),
-                          median(abs_cells, (profile, cp, "wall")),
-                          ratio(ratio_cells, abs_cells, (profile, cp, "started")),
-                          ratio(ratio_cells, abs_cells, (profile, cp, "wall"))]
-                anchor = f' id="{module}"' if first else ""
-                first = False
-                rows.append(f'<tr{anchor}><th scope="row"><a href="{REPO}/tree/{sha}/{group}/">'
-                            f'{escape(label)}</a></th>'
-                            + "".join(f"<td>{escape(field)}</td>" for field in fields)
-                            + f"<td>{stamp}</td></tr>")
+        run_links, run_sections = [], []
+        for position, (index, run) in enumerate(runs):
+            anchor = f"{module}-run-{index}"
+            title = f'{publication_date(run)} / {run["sha"][:7]} / publication {index + 1}'
+            suffix = " (latest)" if position == 0 else ""
+            run_links.append(f'<a href="#{anchor}">{escape(title + suffix)}</a>')
+            absolute = run if absolute_only else paired_absolute(ratios, absolutes, index)
+            content = publication_matrices(module if position == 0 else anchor,
+                                           label, run, absolute, absolute_only)
+            if position == 0:
+                run_sections.append(f'<div id="{anchor}">{content}</div>')
+            else:
+                run_sections.append(f'<details id="{anchor}" class="history"><summary>'
+                                    f'{escape(title)}</summary>{content}</details>')
+        history_note = ("No earlier published run for this scenario." if len(runs) == 1
+                        else "Follow a dated run link, then expand its older matrices.")
+        sections.append(f'<section id="{module}"><h2><a href="{REPO}/tree/{sha}/{group}/">'
+                        f'{escape(label)}</a></h2><p>Published runs (newest first):</p>'
+                        f'<nav aria-label="Published runs for {escape(label)}">'
+                        + " | ".join(run_links) + f'</nav><p>{history_note}</p>'
+                        + "".join(run_sections) + '</section>')
     empty = "" if any_results else "<p>No published results are available yet.</p>"
     return f"""<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Spring Boot Benchmark - latest results</title>
+<title>Spring Boot Benchmark - startup time by setting</title>
 <style>
-body {{ font: 16px/1.5 system-ui, sans-serif; margin: 2rem auto; padding: 0 1rem; max-width: 95rem; color: #222; background: #fff; }}
-a {{ color: #0645ad; }}
+:root {{ color-scheme: light dark; --background: #f9f9f9; --surface: #fff; --subtle: #efefef; --text: #333; --secondary: #5c5c5c; --border: #c9c9c9; --link: #005f8d; }}
+body {{ font: .875rem/1.5 'proxima-nova', Helvetica, Arial, ui-sans-serif, system-ui, sans-serif; margin: 2rem auto; padding: 0 1rem; max-width: 75rem; color: var(--text); background: var(--background); }}
+h1, h2 {{ font-weight: 600; line-height: 1.25; }}
+h1 {{ font-size: 1.5rem; }} h2 {{ font-size: 1.25rem; }}
+a {{ color: var(--link); }}
+:focus-visible {{ outline: 2px solid var(--link); outline-offset: 2px; }}
 nav {{ display: flex; gap: 1rem; flex-wrap: wrap; }}
-.results {{ overflow-x: auto; }}
-table {{ border-collapse: collapse; width: 100%; font-size: .9rem; }}
-th, td {{ padding: .5rem; border: 1px solid #ccc; text-align: left; }}
-thead {{ background: #eee; }}
-tbody tr:nth-child(even) {{ background: #f7f7f7; }}
-td {{ white-space: nowrap; }}
-code {{ background: #eee; padding: .15rem; }}
+section {{ margin-top: 2rem; }}
+.publication, small {{ color: var(--secondary); }}
+.results {{ overflow-x: auto; margin: 1rem 0; }}
+table {{ border-collapse: collapse; width: 100%; background: var(--surface); }}
+caption {{ text-align: left; font-weight: 600; padding-bottom: .5rem; }}
+th, td {{ padding: .5rem 1rem; border: 1px solid var(--border); text-align: left; white-space: nowrap; }}
+thead, tbody tr:nth-child(even) {{ background: var(--subtle); }}
+tbody th {{ position: sticky; left: 0; background: var(--surface); }}
+tbody tr:nth-child(even) th {{ background: var(--subtle); }}
+strong {{ font-size: 1rem; }}
+td small {{ display: block; font-size: .75rem; }}
+summary {{ cursor: pointer; color: var(--link); }}
+.history {{ margin-top: 1rem; }}
+dt {{ font-weight: 600; }} dd {{ margin: 0 0 .5rem; }}
+code {{ background: var(--subtle); padding: .125rem; }}
+@media (prefers-color-scheme: dark) {{
+  :root {{ --background: #131313; --surface: #252525; --subtle: #333; --text: #fff; --secondary: #c9c9c9; --border: #939393; --link: #bfeafe; }}
+}}
 </style>
 </head>
 <body>
-<header><h1>Latest benchmark results</h1>
+<a href="#results">Skip to startup matrices</a>
+<header><h1>Startup time by setting</h1>
 <p><a href="{REPO}">Repository and methodology</a> |
 <a href="data.js" download>Download complete published history (data.js)</a> |
+<a href="#profiles">Build profile guide</a> |
 <a href="#rerun">How to rerun</a></p></header>
-<main>
+<main id="results">
 <p>Spring Boot startup scenarios, by build profile and CPU limit. Each scenario shows its latest
 published full run, not necessarily the current repository version. Follow its commit for the
 exact source and dependency versions measured. Dates are publication times in UTC and may differ
 between scenarios.</p>
 <nav aria-label="Jump to scenario">{' '.join(links)}</nav>
-<p><strong>Read ratios first:</strong> below 1 is faster than plain in the same job.
-Brackets are the original 95% bootstrap confidence intervals.
-Absolute medians are in milliseconds (ms); compare variants within one run, not machines or dates.
-Started is Spring's startup log timing; wall is container start to exit, including Docker overhead.
-CPU is the Docker CPU quota (p06 = 0.6, p10 = 1.0, p20 = 2.0).</p>
+<p>Rows are build profiles; columns are Docker CPU settings. <strong>Each bold time is the
+started median in milliseconds (ms)</strong>, from Spring's startup log.
+The smaller ratio compares that profile to plain in the same job; below 1 is faster.
+Brackets are the original 95% bootstrap confidence intervals for the ratio, not the time.
+Compare profiles within one scenario/run, not machines or dates.</p>
 <p><strong>n/a</strong> means not published for this run; absolute publication is best effort.
 Older absolute measurements are never filled into newer ratio results.
 The full benchmark uses 30 cold starts per profile and CPU limit; this page displays the published
 medians and ratios unchanged, without recalculating measurements.</p>
+<p>Browse each scenario's published runs by date and benchmark commit below.
+Smoke and manual Actions runs are not in published history; these records do not contain Actions run IDs.
+The latest matrices stay visible; older published runs expand without JavaScript.</p>
 {empty}
-<div class="results" role="region" aria-label="Latest benchmark results" tabindex="0">
-<table>
-<caption>Latest published run per scenario; ratios are to plain within the same job</caption>
-<thead><tr><th scope="col">Scenario / framework</th><th scope="col">Build profile</th>
-<th scope="col">CPU</th><th scope="col">Started median (ms)</th><th scope="col">Wall median (ms)</th>
-<th scope="col">Started ratio (95% CI)</th><th scope="col">Wall ratio (95% CI)</th>
-<th scope="col">Published / benchmark commit</th></tr></thead>
-<tbody>
-{chr(10).join(rows)}
-</tbody></table></div>
+{chr(10).join(sections)}
+<section id="profiles"><h2>Build profile guide</h2>
+<dl>
+<dt>plain</dt><dd>No build customization; ratio reference.</dd>
+<dt>aot</dt><dd>Spring AOT.</dd>
+<dt>cds</dt><dd>Class Data Sharing (CDS).</dd>
+<dt>aot-cds</dt><dd>Spring AOT and CDS.</dd>
+<dt>aot-caching</dt><dd>JVM AOT caching.</dd>
+<dt>aot-aot-caching</dt><dd>Spring AOT and JVM AOT caching.</dd>
+<dt>alpaquita</dt><dd>Alpaquita musl builder.</dd>
+<dt>native</dt><dd>Native executable.</dd>
+</dl>
+<p>CPU headers show published setting IDs and Docker quotas, not JVM versions.
+Follow each scenario's benchmark commit for the exact build/JVM configuration.
+Expand its wall-time matrix for container start-to-exit medians, including Docker overhead.
+No confidence interval for absolute medians is published; all displayed intervals belong to ratios.</p>
+</section>
 <section id="rerun"><h2>How to rerun</h2>
 <p>With JDK 25 and Docker, run <code>./measure-runtime.sh 5</code> from the repository root
 for a quick local comparison (logs go to <code>run-logs/</code>).

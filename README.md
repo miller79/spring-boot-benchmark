@@ -1,6 +1,6 @@
 # Spring Boot Benchmark
 
-**[Latest benchmark results](https://miller79.github.io/spring-boot-benchmark/)** - one table by scenario, build profile and CPU limit, with startup milliseconds, ratios, dates and benchmark commits.
+**[Latest benchmark results](https://miller79.github.io/spring-boot-benchmark/)** - startup-time matrices per scenario: build profiles down, CPU settings across, milliseconds and original ratios in each cell.
 
 - [Spring Boot Benchmark](#spring-boot-benchmark)
   - [Introduction](#introduction)
@@ -28,11 +28,11 @@ The Spring Boot GitHub issue this repository was created originally for is avail
 
 ## Where to see the results
 
-Start with the **[latest results table](https://miller79.github.io/spring-boot-benchmark/)**, not Actions. Jump to a scenario on the page; every row shows the build profile, CPU quota, started/wall median **ms**, ratios to `plain` with their original **95% confidence intervals**, and the publication date and benchmark commit. Follow that commit for the dependency versions actually measured; published results may be older than the repository's current version.
+Start with the **[startup-time matrices](https://miller79.github.io/spring-boot-benchmark/)**, not Actions. Jump to a scenario: build profiles are rows, CPU settings are columns, and each cell shows the started median **ms** plus its ratio to `plain` with the original **95% confidence interval**. Expand the wall-time matrix for container start-to-exit times. Each scenario shows its publication date and benchmark commit once; follow that commit for the dependency versions actually measured. Published results may be older than the repository's current version.
 
 | Need | Where |
 |---|---|
-| Latest published full run per scenario | [Results table](https://miller79.github.io/spring-boot-benchmark/), generated automatically by the existing Pages workflow. |
+| Latest published full run per scenario | [Startup-time matrices](https://miller79.github.io/spring-boot-benchmark/), generated automatically by the existing Pages workflow. |
 | Complete published history | Download `data.js` from the table page, or browse [`bench-data/data.js`](https://github.com/miller79/spring-boot-benchmark/blob/bench-data/data.js). |
 | Rerun locally | [Build and Measure Runtimes](#build-and-measure-runtimes): `./measure-runtime.sh 5` (JDK 25 and Docker). |
 | PR smoke results or detailed diagnostics | [Actions](https://github.com/miller79/spring-boot-benchmark/actions) > **benchmark** > run > **Summary**; artifacts `results-<module>` retain raw files for 30 days. |
@@ -157,13 +157,14 @@ How to read the results:
 
 ### Benchmark dashboard
 
-**https://miller79.github.io/spring-boot-benchmark/** is a static latest-results table, readable without JavaScript or chart libraries. The existing `pages` workflow checks out the published history, then `ci/stage-pages.sh` generates `index.html` using `ci/results_page.py`. Only the generated page and the unchanged `data.js` are served. The action-generated chart template remains on `bench-data`, but is no longer the deployed landing page.
+**https://miller79.github.io/spring-boot-benchmark/** shows static startup-time matrices, readable without JavaScript or chart libraries. Each scenario has eight build-profile rows and three CPU-setting columns; startup milliseconds are prominent, with original ratios/intervals beneath. Wall-time matrices use native HTML disclosures. The existing `pages` workflow checks out the published history, then `ci/stage-pages.sh` generates `index.html` using `ci/results_page.py`. Only the generated page and the unchanged `data.js` are served. The action-generated chart template remains on `bench-data`, but is no longer the deployed landing page.
 
 The `pages` workflow runs after each `benchmark` push run on the default branch (`workflow_run`), and can be run by hand (Actions > pages > Run workflow, default branch only) to redeploy or bootstrap the site. It is separate so that a Pages failure never turns a benchmark run red or holds back the last successful push run; a failure is red on the `pages` workflow only. Only an HTTP 404 for `bench-data` is skipped (no history yet); any other error, or a missing `index.html`/`data.js`, fails it.
 
 **One-time setup (repo admin):** Settings > Pages > Build and deployment > Source = **GitHub Actions** (not "Deploy from a branch": pushes made with `GITHUB_TOKEN` do not trigger a branch-based Pages build). Settings > Environments > `github-pages` > restrict deployment branches to `main`. The workflow pins `benchmark-data-dir-path: '.'` and `gh-pages-branch: bench-data`, so history is always written to the root of `bench-data` (`data.js`, `index.html`), never to `dev/bench/`, and merge order does not matter for that; the dashboard reads the root of `bench-data`.
 
 - **Latest results:** the newest ratio publication is selected per module, not one global commit. Different modules may have different dates; the table shows each publication's UTC date and benchmark commit explicitly. Updates only happen when a full run benchmarks that module.
+- **Past/specific published runs:** each scenario has a newest-first date/commit index. Latest startup matrices stay visible; follow an older run link and expand its matrices without JavaScript. If there is only one recorded publication, the page says no earlier published run exists. These are published benchmark records, not Actions run IDs; smoke/manual runs remain in Actions and are not in this history.
 - **Ratios:** median of the variant divided by median of `plain` in the same job; below 1 is faster. The original 95% bootstrap intervals are shown alongside the published values. These are the numbers to trust, and the only ones that alert (more than 20% worse than the previous published run).
 - **Absolute medians (ms):** shown only from the same commit, published after its selected ratio entry. Missing or older absolute data is `n/a`, not silently carried forward. If a module has only absolute history, it is labeled **absolute only**. Shared runners differ, so compare variants within one run, not machines or dates. Nothing alerts on absolute times.
 - **Smoke vs full:** pull requests run a smoke benchmark (`plain` and `aot-cds`, 0.6 CPU, 10 starts, head vs base) and show it only in the job summary. The dashboard holds only full runs (8 profiles, 3 CPU profiles, 30 starts) from pushes to `main`.
@@ -172,4 +173,4 @@ The `pages` workflow runs after each `benchmark` push run on the default branch 
 
 ## Results
 
-Read the **[latest benchmark results](https://miller79.github.io/spring-boot-benchmark/)**. The table is generated from published history rather than manually copied into this README. See [Where to see the results](#where-to-see-the-results) for raw history and diagnostics, and [Build and Measure Runtimes](#build-and-measure-runtimes) to reproduce a local comparison.
+Read the **[latest benchmark results](https://miller79.github.io/spring-boot-benchmark/)**. The matrices are generated from published history rather than manually copied into this README. See [Where to see the results](#where-to-see-the-results) for raw history and diagnostics, and [Build and Measure Runtimes](#build-and-measure-runtimes) to reproduce a local comparison.
