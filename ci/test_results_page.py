@@ -227,6 +227,12 @@ class ControlTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertNotIn("bad-payload", result.stderr)
 
+    def test_ci_runner_includes_new_tests_without_permission_changes(self):
+        current = (ROOT / ".github/workflows/ci-tests.yml").read_text()
+        self.assertIn("ci/test_results_page.py", current)
+        self.assertNotIn("secrets.", current)
+        self.assertNotIn(": write", current)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
