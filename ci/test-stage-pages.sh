@@ -18,11 +18,14 @@ check() {
 fresh() { rm -rf "$WORK/site"; mkdir "$WORK/site"; echo '<html>' > "$WORK/site/index.html"; echo 'window.BENCHMARK_DATA = {}' > "$WORK/site/data.js"; }
 
 fresh; check "both files are staged" 0 "data.js index.html"
+grep -q '<table>' "$WORK/_site/index.html" || { echo "FAIL static results table missing"; fails=$((fails + 1)); }
+cmp "$WORK/site/data.js" "$WORK/_site/data.js" || { echo "FAIL raw history changed"; fails=$((fails + 1)); }
 fresh; echo secret > "$WORK/site/README.md"; mkdir "$WORK/site/dir"; echo x > "$WORK/site/dir/f"; check "extra files and dirs are not staged" 0 "data.js index.html"
 fresh; rm "$WORK/site/data.js"; check "missing data.js fails" 1 "index.html"
 fresh; : > "$WORK/site/index.html"; check "empty index.html fails" 1 ""
 fresh; rm "$WORK/site/data.js"; echo secret > "$WORK/target"; ln -s "$WORK/target" "$WORK/site/data.js"; check "symlinked data.js is rejected" 1 "index.html"
 fresh; rm "$WORK/site/index.html"; mkdir "$WORK/site/index.html"; check "directory named index.html is rejected" 1 ""
+fresh; printf 'window.BENCHMARK_DATA = {}; throw new Error("not executed")' > "$WORK/site/data.js"; check "non-JSON content is rejected" 1 "data.js index.html"
 
 echo
 if [[ $fails -eq 0 ]]; then echo "all stage-pages scenarios passed"; else echo "$fails scenario(s) failed"; exit 1; fi

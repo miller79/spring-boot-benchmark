@@ -36,7 +36,7 @@ jobs:
           persist-credentials: false
       - name: Python tests
         run: |
-          for t in ci/test_report.py ci/test_bench.py ci/test_verify_published.py ci/test_workflows.py; do
+          for t in ci/test_report.py ci/test_bench.py ci/test_verify_published.py ci/test_workflows.py ci/test_results_page.py; do
             echo "::group::$t"
             python3 "$t"
             echo "::endgroup::"
