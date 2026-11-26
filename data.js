@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795662674702,
+  "lastUpdate": 1795662677202,
   "repoUrl": "https://github.com/miller79/spring-boot-benchmark",
   "entries": {
     "spring-boot-benchmark-original": [
@@ -950,6 +950,318 @@ window.BENCHMARK_DATA = {
             "value": 3218,
             "unit": "ms",
             "extra": "n=30, p95=3239.9 ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "anthony.lofton@jbhunt.com",
+            "name": "Anthony Lofton",
+            "username": "miller79"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "31a7a548c0284bb94a30f12d2cb842580aa38cff",
+          "message": "Merge pull request #142 from miller79/lofton/ENG-453-benchmark-results\n\nAI-assisted (Lofton): Add benchmark results page",
+          "timestamp": "2026-11-25T19:17:11-06:00",
+          "tree_id": "e933505825b693fb212c035f79c7faababd54d5a",
+          "url": "https://github.com/miller79/spring-boot-benchmark/commit/31a7a548c0284bb94a30f12d2cb842580aa38cff"
+        },
+        "date": 1795662676941,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "original / plain / p06 / started median ms",
+            "value": 5401.5,
+            "unit": "ms",
+            "extra": "n=30, p95=5697.6 ms"
+          },
+          {
+            "name": "original / plain / p06 / wall median ms",
+            "value": 8624,
+            "unit": "ms",
+            "extra": "n=30, p95=9589.4 ms"
+          },
+          {
+            "name": "original / aot / p06 / started median ms",
+            "value": 4317.5,
+            "unit": "ms",
+            "extra": "n=30, p95=4602.1 ms"
+          },
+          {
+            "name": "original / aot / p06 / wall median ms",
+            "value": 8118.9,
+            "unit": "ms",
+            "extra": "n=30, p95=8446.0 ms"
+          },
+          {
+            "name": "original / cds / p06 / started median ms",
+            "value": 2816,
+            "unit": "ms",
+            "extra": "n=30, p95=3089.3 ms"
+          },
+          {
+            "name": "original / cds / p06 / wall median ms",
+            "value": 5580.3,
+            "unit": "ms",
+            "extra": "n=30, p95=6461.2 ms"
+          },
+          {
+            "name": "original / aot-cds / p06 / started median ms",
+            "value": 1976,
+            "unit": "ms",
+            "extra": "n=30, p95=2097.3 ms"
+          },
+          {
+            "name": "original / aot-cds / p06 / wall median ms",
+            "value": 4678.9,
+            "unit": "ms",
+            "extra": "n=30, p95=5659.5 ms"
+          },
+          {
+            "name": "original / aot-caching / p06 / started median ms",
+            "value": 2814.5,
+            "unit": "ms",
+            "extra": "n=30, p95=3085.3 ms"
+          },
+          {
+            "name": "original / aot-caching / p06 / wall median ms",
+            "value": 5554.4,
+            "unit": "ms",
+            "extra": "n=30, p95=5844.7 ms"
+          },
+          {
+            "name": "original / aot-aot-caching / p06 / started median ms",
+            "value": 1941.5,
+            "unit": "ms",
+            "extra": "n=30, p95=2186.3 ms"
+          },
+          {
+            "name": "original / aot-aot-caching / p06 / wall median ms",
+            "value": 4730.7,
+            "unit": "ms",
+            "extra": "n=30, p95=5724.9 ms"
+          },
+          {
+            "name": "original / alpaquita / p06 / started median ms",
+            "value": 5596,
+            "unit": "ms",
+            "extra": "n=30, p95=5907.8 ms"
+          },
+          {
+            "name": "original / alpaquita / p06 / wall median ms",
+            "value": 8874.5,
+            "unit": "ms",
+            "extra": "n=30, p95=9956.7 ms"
+          },
+          {
+            "name": "original / native / p06 / started median ms",
+            "value": 44,
+            "unit": "ms",
+            "extra": "n=30, p95=60.7 ms"
+          },
+          {
+            "name": "original / native / p06 / wall median ms",
+            "value": 3183.5,
+            "unit": "ms",
+            "extra": "n=30, p95=3197.8 ms"
+          },
+          {
+            "name": "original / plain / p10 / started median ms",
+            "value": 3219.5,
+            "unit": "ms",
+            "extra": "n=30, p95=3366.6 ms"
+          },
+          {
+            "name": "original / plain / p10 / wall median ms",
+            "value": 6608.1,
+            "unit": "ms",
+            "extra": "n=30, p95=6964.7 ms"
+          },
+          {
+            "name": "original / aot / p10 / started median ms",
+            "value": 2578,
+            "unit": "ms",
+            "extra": "n=30, p95=2693.6 ms"
+          },
+          {
+            "name": "original / aot / p10 / wall median ms",
+            "value": 5289.4,
+            "unit": "ms",
+            "extra": "n=30, p95=6297.4 ms"
+          },
+          {
+            "name": "original / cds / p10 / started median ms",
+            "value": 1635.5,
+            "unit": "ms",
+            "extra": "n=30, p95=1787.0 ms"
+          },
+          {
+            "name": "original / cds / p10 / wall median ms",
+            "value": 4218.8,
+            "unit": "ms",
+            "extra": "n=30, p95=5139.6 ms"
+          },
+          {
+            "name": "original / aot-cds / p10 / started median ms",
+            "value": 1110,
+            "unit": "ms",
+            "extra": "n=30, p95=1268.0 ms"
+          },
+          {
+            "name": "original / aot-cds / p10 / wall median ms",
+            "value": 3649.8,
+            "unit": "ms",
+            "extra": "n=30, p95=4569.8 ms"
+          },
+          {
+            "name": "original / aot-caching / p10 / started median ms",
+            "value": 1678.5,
+            "unit": "ms",
+            "extra": "n=30, p95=1802.4 ms"
+          },
+          {
+            "name": "original / aot-caching / p10 / wall median ms",
+            "value": 4200.1,
+            "unit": "ms",
+            "extra": "n=30, p95=5103.9 ms"
+          },
+          {
+            "name": "original / aot-aot-caching / p10 / started median ms",
+            "value": 1119,
+            "unit": "ms",
+            "extra": "n=30, p95=1221.4 ms"
+          },
+          {
+            "name": "original / aot-aot-caching / p10 / wall median ms",
+            "value": 3641.8,
+            "unit": "ms",
+            "extra": "n=30, p95=4581.5 ms"
+          },
+          {
+            "name": "original / alpaquita / p10 / started median ms",
+            "value": 3286.5,
+            "unit": "ms",
+            "extra": "n=30, p95=3447.2 ms"
+          },
+          {
+            "name": "original / alpaquita / p10 / wall median ms",
+            "value": 6787.9,
+            "unit": "ms",
+            "extra": "n=30, p95=7089.1 ms"
+          },
+          {
+            "name": "original / native / p10 / started median ms",
+            "value": 44,
+            "unit": "ms",
+            "extra": "n=30, p95=53.0 ms"
+          },
+          {
+            "name": "original / native / p10 / wall median ms",
+            "value": 3186.3,
+            "unit": "ms",
+            "extra": "n=30, p95=3199.4 ms"
+          },
+          {
+            "name": "original / plain / p20 / started median ms",
+            "value": 1714,
+            "unit": "ms",
+            "extra": "n=30, p95=1803.8 ms"
+          },
+          {
+            "name": "original / plain / p20 / wall median ms",
+            "value": 5095.2,
+            "unit": "ms",
+            "extra": "n=30, p95=5254.2 ms"
+          },
+          {
+            "name": "original / aot / p20 / started median ms",
+            "value": 1348.5,
+            "unit": "ms",
+            "extra": "n=30, p95=1388.2 ms"
+          },
+          {
+            "name": "original / aot / p20 / wall median ms",
+            "value": 3819.2,
+            "unit": "ms",
+            "extra": "n=30, p95=4824.8 ms"
+          },
+          {
+            "name": "original / cds / p20 / started median ms",
+            "value": 862,
+            "unit": "ms",
+            "extra": "n=30, p95=934.5 ms"
+          },
+          {
+            "name": "original / cds / p20 / wall median ms",
+            "value": 3271.2,
+            "unit": "ms",
+            "extra": "n=30, p95=4242.6 ms"
+          },
+          {
+            "name": "original / aot-cds / p20 / started median ms",
+            "value": 587.5,
+            "unit": "ms",
+            "extra": "n=30, p95=637.6 ms"
+          },
+          {
+            "name": "original / aot-cds / p20 / wall median ms",
+            "value": 2967.6,
+            "unit": "ms",
+            "extra": "n=30, p95=3962.3 ms"
+          },
+          {
+            "name": "original / aot-caching / p20 / started median ms",
+            "value": 833,
+            "unit": "ms",
+            "extra": "n=30, p95=894.4 ms"
+          },
+          {
+            "name": "original / aot-caching / p20 / wall median ms",
+            "value": 3210.2,
+            "unit": "ms",
+            "extra": "n=30, p95=4231.5 ms"
+          },
+          {
+            "name": "original / aot-aot-caching / p20 / started median ms",
+            "value": 570,
+            "unit": "ms",
+            "extra": "n=30, p95=609.6 ms"
+          },
+          {
+            "name": "original / aot-aot-caching / p20 / wall median ms",
+            "value": 2945.1,
+            "unit": "ms",
+            "extra": "n=30, p95=3964.2 ms"
+          },
+          {
+            "name": "original / alpaquita / p20 / started median ms",
+            "value": 1662.5,
+            "unit": "ms",
+            "extra": "n=30, p95=1755.0 ms"
+          },
+          {
+            "name": "original / alpaquita / p20 / wall median ms",
+            "value": 4260.4,
+            "unit": "ms",
+            "extra": "n=30, p95=5256.8 ms"
+          },
+          {
+            "name": "original / native / p20 / started median ms",
+            "value": 44,
+            "unit": "ms",
+            "extra": "n=30, p95=54.6 ms"
+          },
+          {
+            "name": "original / native / p20 / wall median ms",
+            "value": 3190,
+            "unit": "ms",
+            "extra": "n=30, p95=3201.3 ms"
           }
         ]
       }
